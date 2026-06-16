@@ -17,6 +17,7 @@
     "validate:env": "pnpm --filter @covenant/skill validate:env",
     "generate:abis": "pnpm --filter @covenant/shared generate:abis",
     "verify:deploy": "pnpm exec tsx scripts/verify-deploy.ts",
+    "smoke:production": "pnpm exec tsx scripts/smoke-production.ts",
     "demo:live": "pnpm --filter @covenant/skill exec tsx scripts/demo-live.ts"
   },
   "engines": {

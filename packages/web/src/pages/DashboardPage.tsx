@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/lib/api";
+import { api, apiConfig } from "@/lib/api";
 import { truncateAddress } from "@/lib/utils";
 
 function StatCard({
@@ -81,8 +81,12 @@ export function DashboardPage() {
           <CardHeader>
             <CardTitle className="text-base text-destructive">Backend unavailable</CardTitle>
             <CardDescription>
-              Ensure the skill server is running at localhost:8787.{" "}
+              Could not reach the COVENANT API at{" "}
+              <code className="text-xs">{apiConfig.apiBase}</code>.{" "}
               {healthQuery.error instanceof Error ? healthQuery.error.message : null}
+              {decisionsQuery.error instanceof Error && !healthQuery.error
+                ? (decisionsQuery.error as Error).message
+                : null}
             </CardDescription>
           </CardHeader>
         </Card>

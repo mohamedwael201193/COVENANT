@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Single Render service: skill (public PORT) + indexer (internal 8788).
+# Single Render service: skill (public PORT, foreground) + indexer (internal 8788).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -15,13 +15,8 @@ if [ -n "${PHAROS_RPC_URL_FALLBACK:-}" ]; then
   unset PHAROS_RPC_PRIMARY
 fi
 
-echo "[render] starting skill on port ${PORT:-8787}..."
 export SKILL_DECISION_WATCHER_ENABLED=false
 export INDEXER_POLL_INTERVAL_MS=${INDEXER_POLL_INTERVAL_MS:-30000}
-node packages/skill/dist/index.js &
-SKILL_PID=$!
-
-sleep 2
 
 echo "[render] starting indexer on port 8788..."
 (
@@ -32,9 +27,9 @@ echo "[render] starting indexer on port 8788..."
 INDEXER_PID=$!
 
 shutdown() {
-  kill "$SKILL_PID" "$INDEXER_PID" 2>/dev/null || true
+  kill "$INDEXER_PID" 2>/dev/null || true
 }
 trap shutdown SIGTERM SIGINT EXIT
 
-wait -n "$SKILL_PID" "$INDEXER_PID"
-exit $?
+echo "[render] starting skill on port ${PORT:-8787} (foreground)..."
+exec node packages/skill/dist/index.js
