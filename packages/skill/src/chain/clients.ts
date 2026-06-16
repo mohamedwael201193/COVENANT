@@ -1,11 +1,13 @@
 import {
   createPublicClient,
   createWalletClient,
+  fallback,
   http,
   type Address,
   type Chain,
   type Hex,
   type PublicClient,
+  type Transport,
   type WalletClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -33,10 +35,23 @@ export interface ChainClients {
   chain: Chain;
 }
 
+function buildRpcTransport(rpcUrls: string[]): Transport {
+  const urls = rpcUrls.filter(Boolean);
+  if (urls.length > 1) {
+    return fallback(urls.map((url) => http(url)));
+  }
+  return http(urls[0]!);
+}
+
 export function createChainClients(env: EnvConfig): ChainClients {
   const chainConfig = loadChainConfig(process.env);
   const chain = buildChain(chainConfig);
-  const transport = http(env.PHAROS_RPC_URL);
+  const rpcUrls = [
+    env.PHAROS_RPC_URL,
+    env.PHAROS_RPC_URL_FALLBACK,
+    ...chainConfig.rpcUrls.fallback?.http ?? [],
+  ].filter(Boolean) as string[];
+  const transport = buildRpcTransport(rpcUrls);
 
   const publicClient = createPublicClient({ chain, transport });
   const attesterAccount = privateKeyToAccount(env.DEPLOYER_PRIVATE_KEY);

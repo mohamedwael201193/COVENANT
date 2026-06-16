@@ -1,14 +1,14 @@
 import { Redis } from "ioredis";
 import { Queue, Worker, type ConnectionOptions, type Job } from "bullmq";
 import type { Logger } from "pino";
-import { jobIdForLog, type RawLogPayload } from "./types.js";
+import { jobIdForLog, toStoredPayload, fromStoredPayload, type RawLogPayload, type StoredLogPayload } from "./types.js";
 
 export const QUEUE_INGEST = "covenant-ingest";
 export const QUEUE_SCORE = "covenant-score";
 export const QUEUE_CACHE_WARM = "covenant-cache-warm";
 
 export interface IngestJobData {
-  payload: RawLogPayload;
+  payload: StoredLogPayload;
 }
 
 export interface ScoreJobData {
@@ -59,7 +59,7 @@ export async function enqueueIngest(
   payload: RawLogPayload,
 ): Promise<void> {
   const jobId = jobIdForLog(payload.txHash, payload.logIndex);
-  await queues.ingest.add("project", { payload }, { jobId, removeOnComplete: 1000, removeOnFail: 5000 });
+  await queues.ingest.add("project", { payload: toStoredPayload(payload) }, { jobId, removeOnComplete: 1000, removeOnFail: 5000 });
 }
 
 export async function enqueueScore(

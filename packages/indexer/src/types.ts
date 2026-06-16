@@ -56,6 +56,59 @@ export interface RawLogPayload {
   event: DecodedIndexerEvent;
 }
 
+/** JSON-safe job payload for BullMQ (no BigInt). */
+export interface StoredLogPayload {
+  txHash: string;
+  logIndex: number;
+  blockNumber: string;
+  blockTimestamp: string;
+  event: StoredIndexerEvent;
+}
+
+export type StoredIndexerEvent =
+  | DecodedAgentEvent
+  | DecodedCovenantEvent
+  | DecodedDecisionEvent
+  | DecodedBreachEvent
+  | {
+      kind: "ReputationUpdated";
+      agent: string;
+      score: string;
+      tier: number;
+      decisionIds: string[];
+      repWriteId: string;
+    };
+
+export function toStoredPayload(payload: RawLogPayload): StoredLogPayload {
+  const { event, blockNumber, blockTimestamp, ...rest } = payload;
+  const storedEvent: StoredIndexerEvent =
+    event.kind === "ReputationUpdated"
+      ? { ...event, score: event.score.toString() }
+      : event;
+
+  return {
+    ...rest,
+    blockNumber: blockNumber.toString(),
+    blockTimestamp: blockTimestamp.toISOString(),
+    event: storedEvent,
+  };
+}
+
+export function fromStoredPayload(stored: StoredLogPayload): RawLogPayload {
+  const { event, blockNumber, blockTimestamp, ...rest } = stored;
+  const decodedEvent: DecodedIndexerEvent =
+    event.kind === "ReputationUpdated"
+      ? { ...event, score: BigInt(event.score) }
+      : event;
+
+  return {
+    ...rest,
+    blockNumber: BigInt(blockNumber),
+    blockTimestamp: new Date(blockTimestamp),
+    event: decodedEvent,
+  };
+}
+
 export function jobIdForLog(txHash: string, logIndex: number): string {
   return `${txHash.toLowerCase()}:${logIndex}`;
 }

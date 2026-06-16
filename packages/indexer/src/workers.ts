@@ -20,6 +20,7 @@ import {
   type QueueBundle,
   type ScoreJobData,
 } from "./queue.js";
+import { fromStoredPayload } from "./types.js";
 import { isLogProcessed, projectLog } from "./projectors/index.js";
 import {
   proposeScoreAfterBreach,
@@ -91,7 +92,7 @@ function agentFromEvent(payload: IngestJobData["payload"]): string | undefined {
 
 export function createIngestHandler(ctx: WorkerContext) {
   return async (job: Job<IngestJobData>): Promise<void> => {
-    const { payload } = job.data;
+    const payload = fromStoredPayload(job.data.payload);
     if (await isLogProcessed(payload.txHash, payload.logIndex)) {
       ctx.log.debug({ jobId: job.id }, "log already processed");
       return;

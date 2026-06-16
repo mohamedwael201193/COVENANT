@@ -48,11 +48,23 @@ export async function collectHealthState(clients: ChainClients): Promise<HealthS
   const { probeRpcCapabilities } = await import("../engine/simulator.js");
   const { readAttesterOnChain } = await import("../chain/clients.js");
 
-  const [rpc, attesterBalance, onChainAttester] = await Promise.all([
-    probeRpcCapabilities(clients.publicClient),
-    clients.publicClient.getBalance({ address: clients.attesterAccount.address }),
-    readAttesterOnChain(clients),
-  ]);
+  const rpc = await probeRpcCapabilities(clients.publicClient);
+
+  let attesterBalance = 0n;
+  try {
+    attesterBalance = await clients.publicClient.getBalance({
+      address: clients.attesterAccount.address,
+    });
+  } catch {
+    // RPC may rate-limit; still return partial health for dashboard
+  }
+
+  let onChainAttester = clients.attesterAccount.address;
+  try {
+    onChainAttester = await readAttesterOnChain(clients);
+  } catch {
+    // keep configured attester as fallback display
+  }
 
   return {
     rpc,
