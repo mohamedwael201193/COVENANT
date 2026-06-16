@@ -49,6 +49,11 @@ export const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => v !== "false" && v !== "0"),
+  PREFLIGHT_LLM_ENABLED: z
+    .string()
+    .optional()
+    .transform((v) => v !== "false" && v !== "0"),
+  PREFLIGHT_LLM_TIMEOUT_MS: z.coerce.number().default(2500),
   PORT: z.coerce.number().optional(),
   IDENTITY_REGISTRY_ADDRESS: hexAddress.optional(),
   COVENANT_REGISTRY_ADDRESS: hexAddress.optional(),

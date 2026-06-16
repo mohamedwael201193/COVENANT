@@ -16,6 +16,7 @@ if [ -n "${PHAROS_RPC_URL_FALLBACK:-}" ]; then
 fi
 
 export SKILL_DECISION_WATCHER_ENABLED=false
+export PREFLIGHT_LLM_ENABLED=false
 export INDEXER_POLL_INTERVAL_MS=${INDEXER_POLL_INTERVAL_MS:-30000}
 
 echo "[render] starting indexer on port 8788..."

@@ -4,12 +4,12 @@ import type { EnvConfig } from "../config.js";
 import { egressAllowlist, fetchWithEgress } from "../egress.js";
 import { llmExplanationSchema } from "./schema.js";
 
-const LLM_TIMEOUT_MS = 15_000;
+const DEFAULT_PROVIDER_TIMEOUT_MS = 2000;
 
 interface LlmProvider {
   name: string;
   enabled: boolean;
-  complete: (system: string, user: string) => Promise<string>;
+  complete: (system: string, user: string, timeoutMs: number) => Promise<string>;
 }
 
 const EXPLANATION_JSON_SCHEMA = {
@@ -63,7 +63,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
     providers.push({
       name: "cerebras",
       enabled: true,
-      complete: async (system, user) => {
+      complete: async (system, user, timeoutMs) => {
         const json = await fetchJson("https://api.cerebras.ai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -79,7 +79,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
             ],
             response_format: { type: "json_object" },
           }),
-          signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
         const parsed = zodChatResponse.parse(json);
         return parsed.choices[0]?.message?.content ?? "";
@@ -91,7 +91,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
     providers.push({
       name: "sambanova",
       enabled: true,
-      complete: async (system, user) => {
+      complete: async (system, user, timeoutMs) => {
         const json = await fetchJson("https://api.sambanova.ai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -106,7 +106,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
               { role: "user", content: user },
             ],
           }),
-          signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
         const parsed = zodChatResponse.parse(json);
         return parsed.choices[0]?.message?.content ?? "";
@@ -118,7 +118,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
     providers.push({
       name: "together",
       enabled: true,
-      complete: async (system, user) => {
+      complete: async (system, user, timeoutMs) => {
         const json = await fetchJson("https://api.together.xyz/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -134,7 +134,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
             ],
             response_format: { type: "json_object" },
           }),
-          signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
         const parsed = zodChatResponse.parse(json);
         return parsed.choices[0]?.message?.content ?? "";
@@ -146,7 +146,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
     providers.push({
       name: "openrouter",
       enabled: true,
-      complete: async (system, user) => {
+      complete: async (system, user, timeoutMs) => {
         const json = await fetchJson("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -162,7 +162,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
             ],
             response_format: { type: "json_object" },
           }),
-          signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
         const parsed = zodChatResponse.parse(json);
         return parsed.choices[0]?.message?.content ?? "";
@@ -174,7 +174,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
     providers.push({
       name: "groq",
       enabled: true,
-      complete: async (system, user) => {
+      complete: async (system, user, timeoutMs) => {
         const json = await fetchJson("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -190,7 +190,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
             ],
             response_format: { type: "json_object" },
           }),
-          signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
         const parsed = zodChatResponse.parse(json);
         return parsed.choices[0]?.message?.content ?? "";
@@ -202,7 +202,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
     providers.push({
       name: "gemini",
       enabled: true,
-      complete: async (system, user) => {
+      complete: async (system, user, timeoutMs) => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
         const json = await fetchJson(url, {
           method: "POST",
@@ -212,7 +212,7 @@ function createProviders(env: EnvConfig): LlmProvider[] {
             contents: [{ role: "user", parts: [{ text: user }] }],
             generationConfig: { temperature: 0, responseMimeType: "application/json" },
           }),
-          signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
         });
         const parsed = geminiResponseSchema.parse(json);
         return parsed.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
@@ -294,32 +294,49 @@ function sanitizeLlmOutput(raw: string, violations: RuleViolation[]): LlmExplana
 
 export class LlmExplainer {
   private readonly providers: LlmProvider[];
+  private readonly enabled: boolean;
+  private readonly budgetMs: number;
 
   constructor(env: EnvConfig) {
     this.providers = createProviders(env);
+    this.enabled = env.PREFLIGHT_LLM_ENABLED !== false;
+    this.budgetMs = env.PREFLIGHT_LLM_TIMEOUT_MS;
   }
 
   hasProviders(): boolean {
-    return this.providers.some((p) => p.enabled);
+    return this.enabled && this.providers.some((p) => p.enabled);
   }
 
   async explain(
     violations: RuleViolation[],
     context: Record<string, unknown>,
   ): Promise<LlmExplanation> {
+    if (!this.enabled || this.providers.length === 0) {
+      return ruleBasedFallback(violations);
+    }
+
     const userPayload = JSON.stringify({
       schema: EXPLANATION_JSON_SCHEMA,
       violations,
       context,
     });
     const system = buildSystemPrompt();
+    const deadline = Date.now() + this.budgetMs;
 
     for (const provider of this.providers) {
       if (!provider.enabled) {
         continue;
       }
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        break;
+      }
       try {
-        const raw = await provider.complete(system, userPayload);
+        const raw = await provider.complete(
+          system,
+          userPayload,
+          Math.min(DEFAULT_PROVIDER_TIMEOUT_MS, remaining),
+        );
         if (!raw.trim()) {
           continue;
         }

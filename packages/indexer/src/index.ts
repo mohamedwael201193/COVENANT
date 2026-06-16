@@ -14,6 +14,7 @@ import {
   createIngestHandler,
   createScoreHandler,
 } from "./workers.js";
+import { backfillMissingReputationScores } from "./backfill.js";
 
 const log = pino({ name: "covenant-indexer" });
 
@@ -32,6 +33,11 @@ async function main(): Promise<void> {
     },
     log,
   );
+
+  const backfilled = await backfillMissingReputationScores(queues, log);
+  if (backfilled > 0) {
+    log.info({ count: backfilled }, "reputation score backfill enqueued");
+  }
 
   const watcher = startWatcher({ env, chain, queues, log });
   const app = createRestApp({ log, client: watcher.client, queues });
