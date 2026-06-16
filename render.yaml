@@ -1,10 +1,7 @@
-# COVENANT — Render Blueprint (backend only)
-# Web dashboard deploys on Vercel — see docs/DEPLOYMENT.md
-#
-# Deploy: Render Dashboard → Blueprint → mohamedwael201193/COVENANT → set secret env vars
+# COVENANT — Render Blueprint (single free web service)
+# Web dashboard: Vercel only. Backend: skill + indexer in one service.
 
 services:
-  # ── Skill server (MCP tools + REST API for dashboard) ─────────────────────
   - type: web
     name: covenant-skill
     runtime: node
@@ -15,8 +12,9 @@ services:
       pnpm install --frozen-lockfile &&
       pnpm generate:abis &&
       pnpm --filter @covenant/shared build &&
-      pnpm --filter @covenant/skill build
-    startCommand: node packages/skill/dist/index.js
+      pnpm --filter @covenant/skill build &&
+      pnpm --filter @covenant/indexer build
+    startCommand: bash scripts/render-start-backend.sh
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
@@ -67,6 +65,14 @@ services:
         sync: false
       - key: INDEXER_START_BLOCK
         value: "24340730"
+      - key: INDEXER_ORACLE_ENABLED
+        value: "true"
+      - key: INDEXER_HTTP_HOST
+        value: "0.0.0.0"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
       - key: IDENTITY_REGISTRY_ADDRESS
         value: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323"
       - key: COVENANT_REGISTRY_ADDRESS
@@ -79,48 +85,3 @@ services:
         value: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F"
       - key: SKILL_SERVER_HOST
         value: "0.0.0.0"
-
-  # ── Indexer (Postgres projections + BullMQ) ───────────────────────────────
-  - type: web
-    name: covenant-indexer
-    runtime: node
-    plan: free
-    region: oregon
-    buildCommand: >-
-      corepack enable &&
-      pnpm install --frozen-lockfile &&
-      pnpm generate:abis &&
-      pnpm --filter @covenant/shared build &&
-      pnpm --filter @covenant/indexer build
-    startCommand: bash scripts/render-start-indexer.sh
-    healthCheckPath: /health
-    envVars:
-      - key: NODE_VERSION
-        value: "22"
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: PHAROS_CHAIN_ID
-        value: "688689"
-      - key: PHAROS_RPC_URL
-        sync: false
-      - key: DEPLOYER_PRIVATE_KEY
-        sync: false
-      - key: INDEXER_START_BLOCK
-        value: "24340730"
-      - key: INDEXER_ORACLE_ENABLED
-        value: "true"
-      - key: IDENTITY_REGISTRY_ADDRESS
-        value: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323"
-      - key: COVENANT_REGISTRY_ADDRESS
-        value: "0x068bB96e849F0DE3D49944Ec0F4aEd3D6B165770"
-      - key: DECISION_LOG_ADDRESS
-        value: "0x8A80D270dd7028536ecB6f92b04eec11F929d603"
-      - key: REPUTATION_REGISTRY_ADDRESS
-        value: "0x92b8815A17D85E45DB5Da9952764Ee2ce072A973"
-      - key: GUARDED_EXECUTOR_ADDRESS
-        value: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F"
-      - key: INDEXER_HTTP_HOST
-        value: "0.0.0.0"
-
