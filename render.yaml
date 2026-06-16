@@ -129,7 +129,6 @@ services:
   - type: web
     name: covenant-web
     runtime: static
-    plan: free
     buildCommand: >-
       corepack enable &&
       pnpm install --frozen-lockfile &&
