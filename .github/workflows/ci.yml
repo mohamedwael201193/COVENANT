@@ -40,6 +40,9 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @covenant/shared build
 
+      - name: Generate Prisma client
+        run: pnpm --filter @covenant/indexer exec prisma generate
+
       - name: Foundry tests
         run: pnpm test:contracts
 
