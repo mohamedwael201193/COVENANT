@@ -37,6 +37,9 @@ jobs:
       - name: Generate ABIs
         run: pnpm generate:abis
 
+      - name: Build shared package
+        run: pnpm --filter @covenant/shared build
+
       - name: Foundry tests
         run: pnpm test:contracts
 
