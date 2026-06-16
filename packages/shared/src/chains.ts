@@ -54,7 +54,7 @@ export function loadChainConfig(env: NodeJS.ProcessEnv = process.env): ChainConf
   const explorer = envOrDefault(env, "PHAROS_EXPLORER_URL", "https://atlantic.pharosscan.xyz");
 
   const httpUrls = [rpcPrimary];
-  if (rpcFallback) {
+  if (rpcFallback && rpcFallback !== rpcPrimary) {
     httpUrls.push(rpcFallback);
   }
 

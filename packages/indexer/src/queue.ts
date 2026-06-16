@@ -74,7 +74,7 @@ export async function enqueueCacheWarm(queues: QueueBundle, agent: string): Prom
   await queues.cacheWarm.add(
     "warm",
     { agent: agent.toLowerCase() },
-    { jobId: `warm:${agent.toLowerCase()}`, removeOnComplete: 100, removeOnFail: 500 },
+    { jobId: `warm-${agent.toLowerCase()}`, removeOnComplete: 100, removeOnFail: 500 },
   );
 }
 

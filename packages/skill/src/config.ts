@@ -45,6 +45,10 @@ export const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === "true" || v === "1"),
+  SKILL_DECISION_WATCHER_ENABLED: z
+    .string()
+    .optional()
+    .transform((v) => v !== "false" && v !== "0"),
   PORT: z.coerce.number().optional(),
   IDENTITY_REGISTRY_ADDRESS: hexAddress.optional(),
   COVENANT_REGISTRY_ADDRESS: hexAddress.optional(),
@@ -74,6 +78,10 @@ export function shouldEnableMcpStdio(env: EnvConfig): boolean {
   if (env.MCP_STDIO_ENABLED === true) return true;
   if (env.MCP_STDIO_ENABLED === false) return false;
   return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
+export function shouldEnableDecisionWatcher(env: EnvConfig): boolean {
+  return env.SKILL_DECISION_WATCHER_ENABLED !== false;
 }
 
 export function getChainConfig() {

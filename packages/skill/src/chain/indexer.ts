@@ -122,6 +122,7 @@ export async function listCovenants(clients: ChainClients): Promise<CovenantReco
   const records: CovenantRecord[] = [];
 
   for (const { owner, agent } of latest.values()) {
+    await sleep(80);
     const result = (await clients.publicClient.readContract({
       address: clients.contracts.covenantRegistry,
       abi: abis.covenantRegistry,
@@ -163,6 +164,7 @@ export async function listDecisions(
   const decisions: DecisionRecord[] = [];
 
   for (let id = nextId - 1n; id >= startId && id >= 0n; id -= 1n) {
+    await sleep(80);
     const row = await readDecision(clients, id);
     const verdictCode = row.verdict;
     const verdict = verdictLabel(verdictCode as 0 | 1 | 2);
@@ -187,7 +189,13 @@ async function countAllVerdicts(clients: ChainClients, nextId: bigint): Promise<
   const stats: DecisionStats = { total: Number(nextId), allow: 0, warn: 0, deny: 0 };
   if (nextId === 0n) return stats;
 
-  for (let id = 0n; id < nextId; id += 1n) {
+  const maxScan = 100;
+  const scanCount = Math.min(Number(nextId), maxScan);
+
+  for (let i = 0; i < scanCount; i++) {
+    const id = nextId - 1n - BigInt(i);
+    if (id < 0n) break;
+    await sleep(80);
     const row = await readDecision(clients, id);
     const verdict = verdictLabel(row.verdict as 0 | 1 | 2);
     if (verdict === "ALLOW") stats.allow += 1;

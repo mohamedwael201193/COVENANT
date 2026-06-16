@@ -7,7 +7,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Server as HttpServer } from "node:http";
 import pino from "pino";
-import { loadConfig, resolveSkillPort, shouldEnableMcpStdio } from "./config.js";
+import { loadConfig, resolveSkillPort, shouldEnableMcpStdio, shouldEnableDecisionWatcher } from "./config.js";
 import { createChainClients } from "./chain/clients.js";
 import { GoPlusClient } from "./engine/riskRead.goplus.js";
 import { LlmExplainer } from "./engine/explainer.llm.js";
@@ -55,7 +55,11 @@ async function main(): Promise<void> {
   }
 
   const rest = createRestApp({ clients, services, log });
-  const stopWatcher = startDecisionWatcher(clients, log);
+  const stopWatcher = shouldEnableDecisionWatcher(env)
+    ? startDecisionWatcher(clients, log)
+    : () => {
+        log.info("DecisionLog watcher disabled (indexer handles chain events)");
+      };
 
   let httpServer: HttpServer | undefined;
   await new Promise<void>((resolve) => {

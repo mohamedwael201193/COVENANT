@@ -49,9 +49,10 @@ export function createChainClients(env: EnvConfig): ChainClients {
   const rpcUrls = [
     env.PHAROS_RPC_URL,
     env.PHAROS_RPC_URL_FALLBACK,
-    ...chainConfig.rpcUrls.fallback?.http ?? [],
+    ...(chainConfig.rpcUrls.fallback?.http ?? []),
   ].filter(Boolean) as string[];
-  const transport = buildRpcTransport(rpcUrls);
+  const uniqueUrls = [...new Set(rpcUrls)];
+  const transport = buildRpcTransport(uniqueUrls);
 
   const publicClient = createPublicClient({ chain, transport });
   const attesterAccount = privateKeyToAccount(env.DEPLOYER_PRIVATE_KEY);

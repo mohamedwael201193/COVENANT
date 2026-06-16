@@ -110,10 +110,13 @@ export function fromStoredPayload(stored: StoredLogPayload): RawLogPayload {
 }
 
 export function jobIdForLog(txHash: string, logIndex: number): string {
-  return `${txHash.toLowerCase()}:${logIndex}`;
+  return `${txHash.toLowerCase()}-${logIndex}`;
 }
 
 export function parseJobId(jobId: string): { txHash: string; logIndex: number } {
-  const [txHash, logIndexRaw] = jobId.split(":");
-  return { txHash, logIndex: Number(logIndexRaw) };
+  const sep = jobId.lastIndexOf("-");
+  if (sep <= 0) {
+    throw new Error(`Invalid job id: ${jobId}`);
+  }
+  return { txHash: jobId.slice(0, sep), logIndex: Number(jobId.slice(sep + 1)) };
 }
