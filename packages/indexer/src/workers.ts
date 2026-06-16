@@ -104,17 +104,44 @@ export function createIngestHandler(ctx: WorkerContext) {
   };
 }
 
+async function readOnChainScore(agent: Address): Promise<bigint> {
+  const chain = getChainConfig();
+  const client = createPublicClient({
+    transport: http(chain.rpcUrls.default.http[0]!),
+  });
+  const result = (await client.readContract({
+    address: chain.contracts.reputationRegistry,
+    abi: abis.reputationRegistry,
+    functionName: "reputations",
+    args: [agent],
+  })) as readonly [bigint, number, bigint];
+  return result[0];
+}
+
 export function createScoreHandler(ctx: WorkerContext) {
   return async (job: Job<ScoreJobData>): Promise<void> => {
     const { agent, decisionId, verdict, breachIntentHash } = job.data;
     const agentLower = agent.toLowerCase();
 
     const existing = await prisma.reputation.findUnique({ where: { agent: agentLower } });
-    const currentScore = existing?.score ?? 0n;
+    let currentScore = existing?.score ?? 0n;
+    try {
+      const onChainScore = await readOnChainScore(agentLower as Address);
+      if (onChainScore > currentScore) {
+        currentScore = onChainScore;
+      }
+    } catch {
+      // keep DB score
+    }
 
     let proposal;
     if (decisionId !== undefined && verdict !== undefined) {
       proposal = proposeScoreAfterDecision(agentLower, decisionId, verdict, currentScore);
+      const baseline = proposeScoreAfterDecision(agentLower, decisionId, verdict, 0n);
+      if (currentScore >= baseline.score) {
+        ctx.log.info({ jobId: job.id, agent: agentLower, score: currentScore.toString() }, "score already reflects decision");
+        return;
+      }
     } else if (breachIntentHash) {
       const related = await prisma.decision.findMany({
         where: { agent: agentLower, intentHash: breachIntentHash.toLowerCase() },

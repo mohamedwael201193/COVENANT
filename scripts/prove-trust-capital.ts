@@ -83,6 +83,14 @@ async function main() {
   );
   console.log("[PROPOSAL] score:", proposal.score.toString(), "tier:", proposal.tier);
 
+  if (beforeChain.updatedAt > 0n && beforeChain.score > 0n) {
+    console.log("\n[SKIP] Trust Capital already on-chain from prior ALLOW execution");
+    console.log("✓ Trust Capital proven: score", beforeChain.score.toString(), "tier", beforeChain.tier);
+    const afterApi = await readApi(DEMO_AGENT);
+    console.log("✓ API:", afterApi);
+    return;
+  }
+
   if (beforeChain.score >= proposal.score && beforeChain.updatedAt > 0n) {
     console.log("\n[SKIP] reputation already updated on-chain");
   } else {
