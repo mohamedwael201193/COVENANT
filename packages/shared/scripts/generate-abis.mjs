@@ -18,11 +18,15 @@ mkdirSync(abisDir, { recursive: true });
 
 for (const { name, path } of CONTRACTS) {
   const sourcePath = join(contractsOut, path);
+  const outPath = join(abisDir, `${name}.json`);
   if (!existsSync(sourcePath)) {
+    if (existsSync(outPath)) {
+      console.log(`Skip ${name}, committed ABI already present`);
+      continue;
+    }
     throw new Error(`Missing forge artifact: ${sourcePath}. Run forge build in packages/contracts.`);
   }
   const artifact = JSON.parse(readFileSync(sourcePath, "utf8"));
-  const outPath = join(abisDir, `${name}.json`);
   writeFileSync(outPath, JSON.stringify(artifact.abi, null, 2));
   console.log(`Wrote ${outPath}`);
 }

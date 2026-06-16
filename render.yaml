@@ -91,9 +91,8 @@ services:
       pnpm install --frozen-lockfile &&
       pnpm generate:abis &&
       pnpm --filter @covenant/shared build &&
-      pnpm --filter @covenant/indexer build &&
-      cd packages/indexer && npx prisma migrate deploy
-    startCommand: node packages/indexer/dist/index.js
+      pnpm --filter @covenant/indexer build
+    startCommand: bash scripts/render-start-indexer.sh
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
