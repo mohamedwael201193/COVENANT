@@ -52,7 +52,11 @@ export function loadConfig(): EnvConfig {
 }
 
 export function resolveIndexerPort(env: EnvConfig): number {
-  return env.PORT ?? env.INDEXER_HTTP_PORT ?? 8788;
+  // INDEXER_HTTP_PORT wins over Render's PORT (combined skill+indexer on one service).
+  if (env.INDEXER_HTTP_PORT !== undefined) {
+    return env.INDEXER_HTTP_PORT;
+  }
+  return env.PORT ?? 8788;
 }
 
 export function getChainConfig() {

@@ -1,6 +1,7 @@
 import {
   createPublicClient,
   decodeEventLog,
+  fallback,
   http,
   type Address,
   type Hex,
@@ -15,6 +16,7 @@ import { INDEXER_STATE_LAST_BLOCK, type DecodedIndexerEvent, type RawLogPayload 
 import type { QueueBundle } from "./queue.js";
 import { enqueueIngest, enqueueScore } from "./queue.js";
 import { isLogProcessed } from "./projectors/index.js";
+import { getLogsChunked } from "./logs.js";
 
 const WATCHED_EVENTS = [
   { name: "AgentRegistered" as const, abi: abis.identityRegistry },
@@ -32,6 +34,13 @@ export interface WatcherDeps {
 }
 
 export function createRpcClient(chain: ChainConfig): PublicClient {
+  const urls = [
+    ...chain.rpcUrls.default.http,
+    ...(chain.rpcUrls.fallback?.http ?? []),
+  ];
+  const transport =
+    urls.length > 1 ? fallback(urls.map((url) => http(url))) : http(urls[0]!);
+
   return createPublicClient({
     chain: {
       id: chain.chainId,
@@ -39,7 +48,7 @@ export function createRpcClient(chain: ChainConfig): PublicClient {
       nativeCurrency: chain.nativeCurrency,
       rpcUrls: chain.rpcUrls,
     },
-    transport: http(chain.rpcUrls.default.http[0]),
+    transport,
   });
 }
 
@@ -172,7 +181,7 @@ export async function pollOnce(deps: WatcherDeps, client: PublicClient): Promise
     contractAddressForEvent(e.name, deps.chain.contracts),
   ).filter(Boolean) as Address[];
 
-  const logs = await client.getLogs({
+  const logs = await getLogsChunked(client, {
     address: addresses,
     fromBlock,
     toBlock: head,
@@ -262,7 +271,7 @@ export async function fetchAllHistoricalLogs(
     contractAddressForEvent(e.name, chain.contracts),
   ).filter(Boolean) as Address[];
 
-  const logs = await client.getLogs({ address: addresses, fromBlock, toBlock });
+  const logs = await getLogsChunked(client, { address: addresses, fromBlock, toBlock });
   const blockTimestamps = new Map<string, Date>();
 
   const payloads: RawLogPayload[] = [];
