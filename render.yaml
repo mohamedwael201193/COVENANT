@@ -1,7 +1,7 @@
-# COVENANT — Render Blueprint
-# https://render.com/docs/blueprint-spec
+# COVENANT — Render Blueprint (backend only)
+# Web dashboard deploys on Vercel — see docs/DEPLOYMENT.md
 #
-# Deploy: connect GitHub repo → Render reads this file → add secret env vars → Deploy
+# Deploy: Render Dashboard → Blueprint → mohamedwael201193/COVENANT → set secret env vars
 
 services:
   # ── Skill server (MCP tools + REST API for dashboard) ─────────────────────
@@ -124,21 +124,4 @@ services:
         value: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F"
       - key: INDEXER_HTTP_HOST
         value: "0.0.0.0"
-
-  # ── Dashboard (static React/Vite) ─────────────────────────────────────────
-  - type: web
-    name: covenant-web
-    runtime: static
-    buildCommand: >-
-      corepack enable &&
-      pnpm install --frozen-lockfile &&
-      node packages/web/scripts/render-build.mjs
-    staticPublishPath: packages/web/dist
-    envVars:
-      - key: NODE_VERSION
-        value: "22"
-      - key: VITE_API_URL
-        sync: false
-      - key: VITE_HEALTH_URL
-        sync: false
 
