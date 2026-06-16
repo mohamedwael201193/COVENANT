@@ -1,0 +1,29 @@
+{
+  "name": "covenant",
+  "private": true,
+  "version": "0.1.0",
+  "description": "COVENANT — credible-commitment layer for autonomous agents on Pharos",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:contracts": "pnpm --filter @covenant/contracts test",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "dev:skill": "pnpm --filter @covenant/skill dev",
+    "dev:indexer": "pnpm --filter @covenant/indexer dev",
+    "dev:web": "pnpm --filter @covenant/web dev",
+    "deploy:contracts": "pnpm --filter @covenant/contracts deploy",
+    "verify:contracts": "pnpm --filter @covenant/contracts verify",
+    "validate:env": "pnpm --filter @covenant/skill validate:env",
+    "generate:abis": "pnpm --filter @covenant/shared generate:abis",
+    "verify:deploy": "pnpm exec tsx scripts/verify-deploy.ts",
+    "demo:live": "pnpm --filter @covenant/skill exec tsx scripts/demo-live.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

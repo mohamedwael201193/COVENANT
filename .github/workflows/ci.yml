@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate ABIs
+        run: pnpm generate:abis
+
+      - name: Install Foundry deps
+        working-directory: packages/contracts
+        run: |
+          forge install foundry-rs/forge-std
+          forge install OpenZeppelin/openzeppelin-contracts@v5.0.2
+
+      - name: Foundry tests
+        run: pnpm test:contracts
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Vitest
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: CertiK scan (non-blocking when unconfigured)
+        run: pnpm --filter @covenant/certik scan
+        continue-on-error: true
+
+      - name: Deploy dry-run
+        working-directory: packages/contracts
+        env:
+          PHAROS_RPC_URL: https://atlantic.dplabs-internal.com
+        run: forge script script/Deploy.s.sol:Deploy --rpc-url $PHAROS_RPC_URL
+
+      - name: Verify deployed contracts (bytecode)
+        env:
+          PHAROS_RPC_URL: https://api.zan.top/node/v1/pharos/atlantic/eba2f87ee4174f41bac3cc6bfc02a4d1
+          IDENTITY_REGISTRY_ADDRESS: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323"
+          COVENANT_REGISTRY_ADDRESS: "0x068bB96e849F0DE3D49944Ec0F4aEd3D6B165770"
+          DECISION_LOG_ADDRESS: "0x8A80D270dd7028536ecB6f92b04eec11F929d603"
+          REPUTATION_REGISTRY_ADDRESS: "0x92b8815A17D85E45DB5Da9952764Ee2ce072A973"
+          GUARDED_EXECUTOR_ADDRESS: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F"
+        run: pnpm verify:deploy

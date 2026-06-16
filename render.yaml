@@ -1,0 +1,152 @@
+# COVENANT — Render Blueprint
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: connect GitHub repo → Render reads this file → add secret env vars → Deploy
+
+services:
+  # ── Skill server (MCP tools + REST API for dashboard) ─────────────────────
+  - type: web
+    name: covenant-skill
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm generate:abis &&
+      pnpm --filter @covenant/shared build &&
+      pnpm --filter @covenant/skill build
+    startCommand: node packages/skill/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MCP_STDIO_ENABLED
+        value: "false"
+      - key: PHAROS_CHAIN_ID
+        value: "688689"
+      - key: PHAROS_RPC_URL
+        sync: false
+      - key: PHAROS_RPC_URL_FALLBACK
+        value: https://atlantic.dplabs-internal.com
+      - key: PHAROS_EXPLORER_URL
+        value: https://atlantic.pharosscan.xyz
+      - key: DEPLOYER_PRIVATE_KEY
+        sync: false
+      - key: GOPLUS_APP_KEY
+        sync: false
+      - key: GOPLUS_APP_SECRET
+        sync: false
+      - key: GOPLUS_API_BASE
+        value: https://api.gopluslabs.io
+      - key: CEREBRAS_API_KEY
+        sync: false
+      - key: CEREBRAS_MODEL
+        value: llama3.3-70b
+      - key: SAMBANOVA_API_KEY
+        sync: false
+      - key: SAMBANOVA_MODEL
+        value: Meta-Llama-3.3-70B-Instruct
+      - key: TOGETHER_API_KEY
+        sync: false
+      - key: TOGETHER_MODEL
+        value: meta-llama/Llama-3.3-70B-Instruct-Turbo-Free
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: meta-llama/llama-3.3-70b-instruct:free
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: PINATA_JWT
+        sync: false
+      - key: INDEXER_START_BLOCK
+        value: "24340730"
+      - key: IDENTITY_REGISTRY_ADDRESS
+        value: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323"
+      - key: COVENANT_REGISTRY_ADDRESS
+        value: "0x068bB96e849F0DE3D49944Ec0F4aEd3D6B165770"
+      - key: DECISION_LOG_ADDRESS
+        value: "0x8A80D270dd7028536ecB6f92b04eec11F929d603"
+      - key: REPUTATION_REGISTRY_ADDRESS
+        value: "0x92b8815A17D85E45DB5Da9952764Ee2ce072A973"
+      - key: GUARDED_EXECUTOR_ADDRESS
+        value: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F"
+      - key: SKILL_SERVER_HOST
+        value: "0.0.0.0"
+
+  # ── Indexer (Postgres projections + BullMQ) ───────────────────────────────
+  - type: web
+    name: covenant-indexer
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm generate:abis &&
+      pnpm --filter @covenant/shared build &&
+      pnpm --filter @covenant/indexer build
+    preDeployCommand: cd packages/indexer && npx prisma migrate deploy
+    startCommand: node packages/indexer/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: covenant-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
+      - key: PHAROS_CHAIN_ID
+        value: "688689"
+      - key: PHAROS_RPC_URL
+        sync: false
+      - key: DEPLOYER_PRIVATE_KEY
+        sync: false
+      - key: INDEXER_START_BLOCK
+        value: "24340730"
+      - key: INDEXER_ORACLE_ENABLED
+        value: "true"
+      - key: IDENTITY_REGISTRY_ADDRESS
+        value: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323"
+      - key: COVENANT_REGISTRY_ADDRESS
+        value: "0x068bB96e849F0DE3D49944Ec0F4aEd3D6B165770"
+      - key: DECISION_LOG_ADDRESS
+        value: "0x8A80D270dd7028536ecB6f92b04eec11F929d603"
+      - key: REPUTATION_REGISTRY_ADDRESS
+        value: "0x92b8815A17D85E45DB5Da9952764Ee2ce072A973"
+      - key: GUARDED_EXECUTOR_ADDRESS
+        value: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F"
+      - key: INDEXER_HTTP_HOST
+        value: "0.0.0.0"
+
+  # ── Dashboard (static React/Vite) ─────────────────────────────────────────
+  - type: web
+    name: covenant-web
+    runtime: static
+    plan: free
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      node packages/web/scripts/render-build.mjs
+    staticPublishPath: packages/web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_HEALTH_URL
+        sync: false
+
+databases:
+  - name: covenant-db
+    plan: free
+    databaseName: covenant
+    user: covenant

@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+FROM node:22-bookworm-slim AS base
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/indexer/package.json packages/indexer/
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS build
+COPY packages/shared packages/shared
+COPY packages/contracts/out packages/contracts/out
+COPY packages/indexer packages/indexer
+RUN pnpm generate:abis && pnpm --filter @covenant/shared build && pnpm --filter @covenant/indexer build
+
+FROM node:22-bookworm-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV INDEXER_HTTP_HOST=0.0.0.0
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages/shared/dist ./packages/shared/dist
+COPY --from=build /app/packages/shared/package.json ./packages/shared/
+COPY --from=build /app/packages/indexer/dist ./packages/indexer/dist
+COPY --from=build /app/packages/indexer/package.json ./packages/indexer/
+COPY --from=build /app/packages/indexer/prisma ./packages/indexer/prisma
+COPY --from=build /app/package.json ./
+EXPOSE 8788
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8788)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "packages/indexer/dist/index.js"]

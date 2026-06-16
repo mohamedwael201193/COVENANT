@@ -1,0 +1,22 @@
+{
+  "name": "covenant-skill",
+  "version": "0.1.0",
+  "description": "COVENANT MCP skill — credible-commitment layer for autonomous agents on Pharos Atlantic testnet",
+  "transport": ["stdio", "http"],
+  "tools": [
+    "registerIdentity",
+    "setCovenant",
+    "preflight",
+    "simulate",
+    "verifyCounterparty",
+    "attestOutcome",
+    "getReceipt",
+    "reputation",
+    "rotateKey"
+  ],
+  "capabilities": {
+    "preflight": "Deterministic rules + eth_call simulation + GoPlus risk → signed ALLOW/WARN/DENY",
+    "chainId": 688689,
+    "network": "Pharos Atlantic Testnet"
+  }
+}

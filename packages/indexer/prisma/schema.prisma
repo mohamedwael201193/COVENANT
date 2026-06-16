@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  address      String   @id @db.VarChar(42)
+  owner        String   @db.VarChar(42)
+  metadataUri  String   @map("metadata_uri")
+  registeredAt DateTime @map("registered_at")
+  lastActive   DateTime @map("last_active")
+  revoked      Boolean  @default(false)
+
+  covenants  Covenant[]
+  decisions  Decision[]
+  reputation Reputation?
+
+  @@map("agents")
+}
+
+model Covenant {
+  id          String   @id @default(cuid())
+  agent       String   @db.VarChar(42)
+  owner       String   @db.VarChar(42)
+  covenantHash String  @map("covenant_hash") @db.VarChar(66)
+  tierCurveRef String @map("tier_curve_ref") @db.VarChar(66)
+  ipfsUri     String   @map("ipfs_uri")
+  createdAt   DateTime @map("created_at")
+  txHash      String   @map("tx_hash") @db.VarChar(66)
+  logIndex    Int      @map("log_index")
+
+  agentRef Agent @relation(fields: [agent], references: [address])
+
+  @@unique([txHash, logIndex])
+  @@index([agent])
+  @@map("covenants")
+}
+
+model Decision {
+  id          String   @id
+  agent       String   @db.VarChar(42)
+  intentHash  String   @map("intent_hash") @db.VarChar(66)
+  verdict     Int
+  reasonHash  String   @map("reason_hash") @db.VarChar(66)
+  outcomeHash String   @map("outcome_hash") @db.VarChar(66)
+  blockNumber BigInt   @map("block_number")
+  txHash      String   @map("tx_hash") @db.VarChar(66)
+  logIndex    Int      @map("log_index")
+  ts          DateTime
+
+  agentRef           Agent               @relation(fields: [agent], references: [address])
+  reputationSources  ReputationSource[]
+
+  @@unique([txHash, logIndex])
+  @@index([agent])
+  @@index([ts])
+  @@map("decisions")
+}
+
+model Reputation {
+  agent     String   @id @db.VarChar(42)
+  score     BigInt
+  tier      Int
+  updatedAt DateTime @map("updated_at")
+
+  agentRef Agent              @relation(fields: [agent], references: [address])
+  sources  ReputationSource[]
+
+  @@map("reputation")
+}
+
+model ReputationSource {
+  id         String @id @default(cuid())
+  repWriteId String @map("rep_write_id") @db.VarChar(66)
+  decisionId String @map("decision_id")
+  agent      String @db.VarChar(42)
+
+  reputation Reputation @relation(fields: [agent], references: [agent])
+  decision   Decision   @relation(fields: [decisionId], references: [id])
+
+  @@unique([repWriteId, decisionId])
+  @@index([decisionId])
+  @@map("reputation_sources")
+}
+
+model Obligation {
+  id           String   @id @default(cuid())
+  agent        String   @db.VarChar(42)
+  counterparty String   @db.VarChar(42)
+  amount       BigInt
+  status       String
+  settledTx    String?  @map("settled_tx") @db.VarChar(66)
+  ts           DateTime
+
+  @@index([agent])
+  @@index([status])
+  @@map("obligations")
+}
+
+model IndexerState {
+  key   String @id
+  value String
+
+  @@map("indexer_state")
+}
+
+model ProcessedLog {
+  txHash   String @map("tx_hash") @db.VarChar(66)
+  logIndex Int    @map("log_index")
+
+  @@id([txHash, logIndex])
+  @@map("processed_logs")
+}

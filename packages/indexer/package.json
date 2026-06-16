@@ -1,0 +1,41 @@
+{
+  "name": "@covenant/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "prisma generate && tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "tsx scripts/run-prisma.ts generate",
+    "db:migrate": "tsx scripts/run-prisma.ts migrate deploy",
+    "db:migrate:dev": "tsx scripts/run-prisma.ts migrate dev",
+    "validate:db": "tsx scripts/validate-db.ts",
+    "validate:redis": "tsx scripts/validate-redis.ts"
+  },
+  "dependencies": {
+    "@covenant/shared": "workspace:*",
+    "@prisma/client": "^6.4.1",
+    "bullmq": "^5.41.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.5.0",
+    "pino": "^9.6.0",
+    "viem": "^2.23.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.4",
+    "prisma": "^6.4.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

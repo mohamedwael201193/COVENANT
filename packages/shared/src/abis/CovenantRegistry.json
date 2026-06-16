@@ -1,0 +1,130 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "identityRegistry_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "covenants",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "agent",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "covenantHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tierCurveRef",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "ipfsURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "updatedAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "identityRegistry",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IIdentityRegistry"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setCovenant",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "covenantHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tierCurveRef",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "ipfsURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "CovenantSet",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "agent",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "covenantHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tierCurveRef",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "ipfsURI",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  }
+]
