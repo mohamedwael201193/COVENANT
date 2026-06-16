@@ -20,7 +20,7 @@ import {
   type QueueBundle,
   type ScoreJobData,
 } from "./queue.js";
-import { fromStoredPayload } from "./types.js";
+import { fromStoredPayload, type RawLogPayload } from "./types.js";
 import { isLogProcessed, projectLog } from "./projectors/index.js";
 import {
   proposeScoreAfterBreach,
@@ -85,7 +85,7 @@ async function writeOnChainScore(
   return hash;
 }
 
-function agentFromEvent(payload: IngestJobData["payload"]): string | undefined {
+function agentFromEvent(payload: RawLogPayload): string | undefined {
   if ("agent" in payload.event) return payload.event.agent;
   return undefined;
 }

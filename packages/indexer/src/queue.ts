@@ -1,7 +1,7 @@
 import { Redis } from "ioredis";
 import { Queue, Worker, type ConnectionOptions, type Job } from "bullmq";
 import type { Logger } from "pino";
-import { jobIdForLog, toStoredPayload, fromStoredPayload, type RawLogPayload, type StoredLogPayload } from "./types.js";
+import { jobIdForLog, toStoredPayload, type RawLogPayload, type StoredLogPayload } from "./types.js";
 
 export const QUEUE_INGEST = "covenant-ingest";
 export const QUEUE_SCORE = "covenant-score";
