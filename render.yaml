@@ -91,17 +91,15 @@ services:
       pnpm install --frozen-lockfile &&
       pnpm generate:abis &&
       pnpm --filter @covenant/shared build &&
-      pnpm --filter @covenant/indexer build
-    preDeployCommand: cd packages/indexer && npx prisma migrate deploy
+      pnpm --filter @covenant/indexer build &&
+      cd packages/indexer && npx prisma migrate deploy
     startCommand: node packages/indexer/dist/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: "22"
       - key: DATABASE_URL
-        fromDatabase:
-          name: covenant-db
-          property: connectionString
+        sync: false
       - key: REDIS_URL
         sync: false
       - key: PHAROS_CHAIN_ID
@@ -145,8 +143,3 @@ services:
       - key: VITE_HEALTH_URL
         sync: false
 
-databases:
-  - name: covenant-db
-    plan: free
-    databaseName: covenant
-    user: covenant
