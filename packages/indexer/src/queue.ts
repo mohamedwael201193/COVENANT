@@ -3,9 +3,9 @@ import { Queue, Worker, type ConnectionOptions, type Job } from "bullmq";
 import type { Logger } from "pino";
 import { jobIdForLog, type RawLogPayload } from "./types.js";
 
-export const QUEUE_INGEST = "covenant:ingest";
-export const QUEUE_SCORE = "covenant:score";
-export const QUEUE_CACHE_WARM = "covenant:cache-warm";
+export const QUEUE_INGEST = "covenant-ingest";
+export const QUEUE_SCORE = "covenant-score";
+export const QUEUE_CACHE_WARM = "covenant-cache-warm";
 
 export interface IngestJobData {
   payload: RawLogPayload;
