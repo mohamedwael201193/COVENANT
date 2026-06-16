@@ -27,14 +27,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate ABIs
-        run: pnpm generate:abis
-
       - name: Install Foundry deps
         working-directory: packages/contracts
         run: |
           forge install foundry-rs/forge-std
           forge install OpenZeppelin/openzeppelin-contracts@v5.0.2
+          forge build
+
+      - name: Generate ABIs
+        run: pnpm generate:abis
 
       - name: Foundry tests
         run: pnpm test:contracts
