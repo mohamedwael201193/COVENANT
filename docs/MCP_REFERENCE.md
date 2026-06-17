@@ -1,8 +1,8 @@
 # COVENANT MCP Reference
 
-Install: `npx covenant-mcp` · Package: `covenant-mcp` · See [docs/skill/INSTALL.md](./skill/INSTALL.md)
+Install: `npx covenant-mcp` · Package: `covenant-mcp@0.2.7` · See [README](../README.md#installation)
 
-The MCP server exposes **10 tools** (prefixed `covenant_*`) over stdio. Legacy names (`preflight`, `reputation`, …) still resolve.
+The MCP server exposes **17 tools** (prefixed `covenant_*`) over stdio or hosted HTTP.
 
 Server metadata: `{ name: "covenant", version: "0.1.0" }` with workflow **instructions** on initialize.
 

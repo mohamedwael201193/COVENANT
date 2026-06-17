@@ -1,49 +1,58 @@
 # COVENANT Documentation
 
-Start here after the [README](../README.md).
+**Developers:** start with the [README](../README.md).
 
-## Quick paths
+## I want to…
 
-| I want to… | Go to |
+| Goal | Document |
 |---|---|
-| Judge in 60s (no wallet) | [prompts/judge-demo.md](./prompts/judge-demo.md) |
-| Record video demo | [prompts/video-demo.md](./prompts/video-demo.md) |
-| Install + validate | [prompts/agent-bootstrap.md](./prompts/agent-bootstrap.md) |
-| Verify on-chain proof | [JUDGE_QUICK_START.md](./JUDGE_QUICK_START.md) |
-| Architecture | [architecture/README.md](./architecture/README.md) |
+| Install COVENANT | [README § Installation](../README.md#installation) |
+| Configure MCP client | [README § MCP Configuration](../README.md#mcp-configuration) |
+| Understand wallet flow | [README § Wallet Authorization](../README.md#wallet-authorization-flow) |
+| See all 17 tools | [MCP_REFERENCE.md](./MCP_REFERENCE.md) |
+| Copy-paste agent prompts | [prompts/](./prompts/) |
+| Run workflow examples | [skill/EXAMPLES.md](./skill/EXAMPLES.md) |
+| Fix an error | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) |
+| Deploy / operate | [DEPLOYMENT.md](./DEPLOYMENT.md) |
+| Verify hackathon proof | [JUDGE_QUICK_START.md](./JUDGE_QUICK_START.md) |
 
-## Prompt library
+## Agent prompts (production)
 
-| Prompt | Purpose | Wallet? |
-|---|---|---|
-| **[judge-demo.md](./prompts/judge-demo.md)** | Hackathon judge — single best prompt | No |
-| **[video-demo.md](./prompts/video-demo.md)** | Screen recording | Yes |
-| [agent-bootstrap.md](./prompts/agent-bootstrap.md) | Install + 4-tool validation | No |
-| [agent-health-check.md](./prompts/agent-health-check.md) | 10s smoke test | No |
-| [agent-risk-review.md](./prompts/agent-risk-review.md) | Preflight workflow | No |
-| [agent-wallet-authorization.md](./prompts/agent-wallet-authorization.md) | SIWE + approval URLs | Yes |
-| [agent-send-money.md](./prompts/agent-send-money.md) | Full send workflow | Yes |
-| [agent-counterparty-check.md](./prompts/agent-counterparty-check.md) | Recipient risk | No |
+| Prompt | Purpose |
+|---|---|
+| [agent-install.md](./prompts/agent-install.md) | Install MCP |
+| [agent-bootstrap.md](./prompts/agent-bootstrap.md) | Validate installation |
+| [agent-health-check.md](./prompts/agent-health-check.md) | Smoke test |
+| [agent-reputation-review.md](./prompts/agent-reputation-review.md) | Trust Capital |
+| [agent-risk-review.md](./prompts/agent-risk-review.md) | Preflight workflow |
+| [agent-wallet-authorization.md](./prompts/agent-wallet-authorization.md) | SIWE session |
+| [agent-request-approval.md](./prompts/agent-request-approval.md) | Approval URL |
+| [agent-end-to-end.md](./prompts/agent-end-to-end.md) | Full workflow |
+| [agent-send-money.md](./prompts/agent-send-money.md) | Send PHRS |
+| [agent-counterparty-check.md](./prompts/agent-counterparty-check.md) | Recipient risk |
 
 ## Reference
 
 | Doc | Description |
 |---|---|
-| [MCP_REFERENCE.md](./MCP_REFERENCE.md) | 17 tool schemas |
+| [DOCUMENTATION_MAP.md](./DOCUMENTATION_MAP.md) | Full hierarchy |
+| [MCP_REFERENCE.md](./MCP_REFERENCE.md) | Tool schemas |
 | [API_REFERENCE.md](./API_REFERENCE.md) | REST endpoints |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System design |
 | [SECURITY.md](./SECURITY.md) | Threat model |
+| [skill/INTEGRATIONS.md](./skill/INTEGRATIONS.md) | Client integrations |
 
-## Proofs
-
-| Doc | Description |
-|---|---|
-| [proofs/PROOF_OF_EXECUTION.md](./proofs/PROOF_OF_EXECUTION.md) | Real on-chain execution (demo addresses) |
-| [JUDGE_QUICK_START.md](./JUDGE_QUICK_START.md) | 60s verification |
-
-## Audits
+## Judges & submission
 
 | Doc | Description |
 |---|---|
-| [../AGENT_EXPERIENCE_AUDIT.md](../AGENT_EXPERIENCE_AUDIT.md) | Onboarding audit |
+| [JUDGE_QUICK_START.md](./JUDGE_QUICK_START.md) | Proof verification |
+| [proofs/PROOF_OF_EXECUTION.md](./proofs/PROOF_OF_EXECUTION.md) | On-chain evidence |
+| [submission/](./submission/) | Hackathon submission docs |
+
+## Internal
+
+| Doc | Description |
+|---|---|
 | [../AGENTS.md](../AGENTS.md) | Agent skill manifest |
+| [../AGENT_EXPERIENCE_AUDIT.md](../AGENT_EXPERIENCE_AUDIT.md) | DX scorecard |

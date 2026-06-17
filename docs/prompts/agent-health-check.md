@@ -12,5 +12,5 @@ Verify COVENANT MCP is working.
 Do not ask for API keys, private keys, or wallet addresses.
 If health fails, suggest: npx -y covenant-mcp init and restart MCP client.
 
-For full validation, use docs/prompts/judge-demo.md instead.
+For full validation after install, use docs/prompts/agent-bootstrap.md.
 ```

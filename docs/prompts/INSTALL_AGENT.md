@@ -1,5 +1,7 @@
 # Moved
 
-Use the canonical judge prompt:
+Use the production install prompt:
 
-**[judge-demo.md](./judge-demo.md)**
+**[agent-install.md](./agent-install.md)**
+
+Developer docs: [README.md](../../README.md#installation)

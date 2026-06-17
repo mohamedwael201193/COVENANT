@@ -1,46 +1,45 @@
 # COVENANT Agent Skill
 
-Install COVENANT as an MCP server — not a dashboard. The web UI is a **demo only**.
+COVENANT is an MCP server for trust, authorization, and guarded on-chain execution on Pharos.
 
-## Judge path (< 60s, no wallet)
+**Install:** `npx -y covenant-mcp init` → restart MCP client.
 
-```bash
-npx -y covenant-mcp init
-```
+## When to use
 
-Paste **[docs/prompts/judge-demo.md](docs/prompts/judge-demo.md)** into a fresh chat.
-
-## Video demo (~90s, with wallet)
-
-**[docs/prompts/video-demo.md](docs/prompts/video-demo.md)**
-
-## Developer path
-
-**[docs/prompts/agent-bootstrap.md](docs/prompts/agent-bootstrap.md)**
-
-## When to use COVENANT
-
-Use COVENANT **before** autonomous agents execute on-chain actions (transfers, contract calls, payments).
+Call COVENANT **before** any on-chain action (transfer, contract call, payment).
 
 Do **not** use for off-chain auth, custodial wallets, or LLM-only safety checks.
 
-## Standard tool sequence
+## Standard sequence
 
 ```text
-covenant_health → covenant_reputation → covenant_preflight → covenant_sign_attestation
-→ covenant_connect_wallet → covenant_request_approval → [user approves] → covenant_get_receipt
+covenant_health → covenant_reputation → covenant_preflight
+→ covenant_sign_attestation → covenant_connect_wallet → covenant_request_approval
+→ [user approves] → covenant_get_receipt
 ```
 
-## Tools (17)
+## Agent prompts
 
-All prefixed `covenant_*`. Schemas: [docs/MCP_REFERENCE.md](docs/MCP_REFERENCE.md)
+| Task | Prompt |
+|---|---|
+| Install | [docs/prompts/agent-install.md](docs/prompts/agent-install.md) |
+| Validate | [docs/prompts/agent-bootstrap.md](docs/prompts/agent-bootstrap.md) |
+| Health check | [docs/prompts/agent-health-check.md](docs/prompts/agent-health-check.md) |
+| Reputation | [docs/prompts/agent-reputation-review.md](docs/prompts/agent-reputation-review.md) |
+| Risk review | [docs/prompts/agent-risk-review.md](docs/prompts/agent-risk-review.md) |
+| Connect wallet | [docs/prompts/agent-wallet-authorization.md](docs/prompts/agent-wallet-authorization.md) |
+| Request approval | [docs/prompts/agent-request-approval.md](docs/prompts/agent-request-approval.md) |
+| End-to-end | [docs/prompts/agent-end-to-end.md](docs/prompts/agent-end-to-end.md) |
+
+## Tools
+
+17 tools prefixed `covenant_*`. Schemas: [docs/MCP_REFERENCE.md](docs/MCP_REFERENCE.md)
 
 ## Documentation
 
-- [README.md](README.md) — start here
-- [docs/prompts/judge-demo.md](docs/prompts/judge-demo.md) — hackathon judges
-- [docs/prompts/video-demo.md](docs/prompts/video-demo.md) — screen recording
-- [docs/proofs/PROOF_OF_EXECUTION.md](docs/proofs/PROOF_OF_EXECUTION.md) — on-chain proof
+- [README.md](README.md) — product docs
+- [docs/README.md](docs/README.md) — doc index
+- [docs/skill/EXAMPLES.md](docs/skill/EXAMPLES.md) — workflows
 
 ```bash
 npx -y covenant-mcp

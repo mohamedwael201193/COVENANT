@@ -1,5 +1,7 @@
 # 5-Minute Install Guide
 
+> **Quick path:** See [README § Installation](../README.md#installation) for `npx covenant-mcp init` and zero-secret setup. This guide covers optional secrets and advanced configuration.
+
 Install COVENANT MCP for any agent client in five steps.
 
 ## Step 1 — Initialize (30 seconds)

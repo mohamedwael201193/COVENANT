@@ -1,6 +1,7 @@
 # Moved
 
-This prompt was renamed. Use:
+Use the production end-to-end prompt:
 
-- **Judges (no wallet):** [judge-demo.md](./judge-demo.md)
-- **Video recording (with wallet):** [video-demo.md](./video-demo.md)
+**[agent-end-to-end.md](./agent-end-to-end.md)**
+
+Developer docs: [README.md](../../README.md#agent-installation-prompts)
