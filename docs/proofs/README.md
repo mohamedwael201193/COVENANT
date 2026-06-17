@@ -1,6 +1,6 @@
 # Production Proofs
 
-Judge-verifiable evidence of real on-chain execution.
+Judge-verifiable evidence of real on-chain execution. Addresses in the proof doc are **demo-only** — use your own wallet in workflows.
 
 | Document | Description |
 |---|---|

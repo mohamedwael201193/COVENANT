@@ -6,7 +6,9 @@ import { resolve } from "node:path";
 import { writeFileSync } from "node:fs";
 
 const bin = process.env.MCP_BIN ?? resolve(import.meta.dirname, "../../mcp/dist/cli.js");
-const agent = "0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3";
+// Public contract probe — not a personal wallet (override via COVENANT_PROBE_AGENT)
+const agent =
+  process.env.COVENANT_PROBE_AGENT ?? "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323";
 const root = resolve(import.meta.dirname, "../../..");
 
 const env = {

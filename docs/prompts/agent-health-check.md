@@ -9,6 +9,8 @@ Verify COVENANT MCP is working.
 2. List all covenant_* tools (expect 17).
 3. Report: status, chainId, attester address, tool count.
 
-Do not ask for API keys or private keys.
+Do not ask for API keys, private keys, or wallet addresses.
 If health fails, suggest: npx -y covenant-mcp init and restart MCP client.
+
+For full validation, use docs/prompts/judge-demo.md instead.
 ```

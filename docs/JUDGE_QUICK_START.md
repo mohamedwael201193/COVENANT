@@ -1,55 +1,44 @@
 # Judge Quick Start
 
-Verify COVENANT in **under 3 minutes** without reading the full codebase.
+Verify COVENANT in **under 60 seconds** — no wallet required.
 
-## 1. Install (30s)
+## 1. Install (15s)
 
 ```bash
 npx -y covenant-mcp init
 ```
 
-Restart Cursor. Paste [`agent-bootstrap.md`](./prompts/agent-bootstrap.md) into a fresh chat.
+Restart Cursor.
 
-**Pass:** 17 tools, `covenant_health` → `status: ok`, chainId `688689`.
+## 2. Paste one prompt (30s)
 
-## 2. API health (10s)
+**[`docs/prompts/judge-demo.md`](./prompts/judge-demo.md)**
 
-```bash
-curl -s https://covenant-skill.onrender.com/health
-```
+Agent will: install → discover 17 tools → run health → reputation → simulate → preflight → print report.
 
-**Pass:** `"status":"ok"`, `"chainId":688689`, attester balance > 0.
+**Pass:** 17 tools, `covenant_health` → `status: ok`, chainId `688689`, preflight verdict returned.
 
-## 3. On-chain proof (30s)
+## 3. Verify proof (15s)
 
 | Check | URL |
 |---|---|
+| Proof doc | [proofs/PROOF_OF_EXECUTION.md](./proofs/PROOF_OF_EXECUTION.md) |
 | Transaction | https://atlantic.pharosscan.xyz/tx/0x1c5a7e9d00c29070c0508b47524c32284b983022b43ac338e4afe15ee7bebd1c |
 | Receipt API | https://covenant-skill.onrender.com/api/receipt/1 |
-| Decisions | https://covenant-skill.onrender.com/api/decisions?limit=3 |
 
-**Pass:** Tx status Success, receipt `verdict: ALLOW`, `decisionId: 1`.
+**Pass:** Tx status Success, receipt `verdict: ALLOW`.
 
-## 4. Live demo (optional, ~90s)
+## 4. Live wallet demo (optional, ~90s)
 
-Paste [`agent-full-demo.md`](./prompts/agent-full-demo.md) into Cursor.
+Paste **[`docs/prompts/video-demo.md`](./prompts/video-demo.md)**. Provide your wallet address when asked. MetaMask on **chain 688689**.
 
-User signs wallet at `connectUrl` and `approvalUrl`. MetaMask on **chain 688689**.
-
-## 5. Contracts on PharosScan
-
-| Contract | Address |
-|---|---|
-| GuardedExecutor | [0x2741…d2d2F](https://atlantic.pharosscan.xyz/address/0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F) |
-| DecisionLog | [0x8A80…d603](https://atlantic.pharosscan.xyz/address/0x8A80D270dd7028536ecB6f92b04eec11F929d603) |
-
-## Full proof document
-
-[proofs/PROOF_OF_EXECUTION.md](./proofs/PROOF_OF_EXECUTION.md)
-
-## npm versions
+## API health
 
 ```bash
+curl -s https://covenant-skill.onrender.com/health
 npm view covenant-mcp version   # 0.2.7
-npm view covenant-skill version # 0.2.7
 ```
+
+## Demo addresses
+
+Personal wallets in proof docs are for verification only. Use your own addresses in prompts — see README § Demo Addresses.

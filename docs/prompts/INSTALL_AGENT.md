@@ -1,5 +1,5 @@
 # Moved
 
-This prompt was renamed. Use:
+Use the canonical judge prompt:
 
-**[agent-bootstrap.md](./agent-bootstrap.md)**
+**[judge-demo.md](./judge-demo.md)**

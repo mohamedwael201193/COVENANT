@@ -1,5 +1,7 @@
 # COVENANT — Proof of Execution
 
+> **Demo addresses only.** The wallet and agent addresses below were used for this one-time production proof. Do not copy them into prompts or workflows — use your own `<YOUR_WALLET_ADDRESS>` and `<YOUR_AGENT_ADDRESS>`. See README § Demo Addresses.
+
 **Date:** 2026-06-17  
 **Verifier:** Third-party agent (clean install from npm + hosted MCP)  
 **Result:** End-to-end production proof **PASSED**
