@@ -104,13 +104,19 @@ export function ApprovePage() {
       .catch(() => setReceipt(null));
   }, [decisionId]);
 
-  const needsRegister = onChain != null && !onChain.registered;
+  const agentMismatch =
+    onChain?.linkedAgent &&
+    approval?.executionPayload?.intent.agent &&
+    approval.executionPayload.intent.agent.toLowerCase() !== onChain.linkedAgent.toLowerCase();
+
+  const needsRegister = onChain != null && !onChain.registered && !onChain.linkedAgent;
   const needsCovenant =
     onChain != null &&
     onChain.registered &&
+    !agentMismatch &&
     approval?.executionPayload?.covenantHash &&
     onChain.covenantHash?.toLowerCase() !== approval.executionPayload.covenantHash.toLowerCase();
-  const readyToExecute = onChain != null && !needsRegister && !needsCovenant;
+  const readyToExecute = onChain != null && !needsRegister && !needsCovenant && !agentMismatch;
 
   async function registerAgent() {
     if (!approval) return;
@@ -136,7 +142,7 @@ export function ApprovePage() {
     setError("");
     try {
       const { client, address } = await connectWallet();
-      const agent = approval.executionPayload.intent.agent as Hex;
+      const agent = (onChain?.linkedAgent ?? approval.executionPayload?.intent.agent) as Hex;
       const covenant = approval.executionPayload.preflightRequest?.covenant ?? { tierLimits: [] };
       const hash = await publishCovenantOnChain(
         client,
@@ -318,12 +324,21 @@ export function ApprovePage() {
               <p className="text-muted-foreground">
                 GuardedExecutor requires your agent identity and covenant hash on Pharos before execution.
               </p>
+              {onChain.linkedAgent && (
+                <p className="font-mono break-all">Linked agent: {onChain.linkedAgent}</p>
+              )}
               <p>{onChain.registered ? "✓ Agent registered" : "○ Agent not registered"}</p>
               <p>
-                {readyToExecute || (!needsRegister && !needsCovenant)
+                {readyToExecute || (!needsRegister && !needsCovenant && !agentMismatch)
                   ? "✓ Covenant published"
                   : "○ Covenant not published for this approval"}
               </p>
+              {agentMismatch && (
+                <p className="text-destructive">
+                  This approval uses the wrong agent address. Ask your agent for a new approval using linked agent{" "}
+                  {onChain.linkedAgent}.
+                </p>
+              )}
             </div>
           )}
 

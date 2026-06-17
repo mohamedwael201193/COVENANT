@@ -15,6 +15,13 @@ export const CONTRACTS = {
 export const IDENTITY_REGISTRY_ABI = [
   {
     type: "function",
+    name: "agentOfOwner",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "ownerOfAgent",
     inputs: [{ name: "agent", type: "address" }],
     outputs: [{ name: "", type: "address" }],

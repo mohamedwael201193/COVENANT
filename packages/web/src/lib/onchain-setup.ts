@@ -14,27 +14,40 @@ export interface AgentOnChainStatus {
   active: boolean;
   owner: Hex | null;
   covenantHash: Hex | null;
+  /** Agent key already linked to this owner in IdentityRegistry */
+  linkedAgent: Hex | null;
 }
 
 export async function readAgentOnChainStatus(
   agent: Hex,
   wallet: Hex,
 ): Promise<AgentOnChainStatus> {
+  const zero = "0x0000000000000000000000000000000000000000" as Hex;
+
+  const linkedAgent = (await publicClient.readContract({
+    address: CONTRACTS.identityRegistry,
+    abi: IDENTITY_REGISTRY_ABI,
+    functionName: "agentOfOwner",
+    args: [wallet],
+  })) as Hex;
+
+  const effectiveAgent =
+    linkedAgent.toLowerCase() !== zero.toLowerCase() ? linkedAgent : agent;
+
   const owner = (await publicClient.readContract({
     address: CONTRACTS.identityRegistry,
     abi: IDENTITY_REGISTRY_ABI,
     functionName: "ownerOfAgent",
-    args: [agent],
+    args: [effectiveAgent],
   })) as Hex;
 
-  const zero = "0x0000000000000000000000000000000000000000";
-  const registered = owner.toLowerCase() !== zero;
+  const registered = owner.toLowerCase() !== zero.toLowerCase();
   const active = registered
     ? await publicClient.readContract({
         address: CONTRACTS.identityRegistry,
         abi: IDENTITY_REGISTRY_ABI,
         functionName: "isActive",
-        args: [agent],
+        args: [effectiveAgent],
       })
     : false;
 
@@ -44,10 +57,10 @@ export async function readAgentOnChainStatus(
       address: CONTRACTS.covenantRegistry,
       abi: COVENANT_REGISTRY_ABI,
       functionName: "covenants",
-      args: [wallet, agent],
+      args: [wallet, effectiveAgent],
     });
     const hash = stored[0] as Hex;
-    covenantHash = hash.toLowerCase() === zero ? null : hash;
+    covenantHash = hash.toLowerCase() === zero.toLowerCase() ? null : hash;
   }
 
   return {
@@ -55,7 +68,32 @@ export async function readAgentOnChainStatus(
     active: Boolean(active),
     owner: registered ? owner : null,
     covenantHash,
+    linkedAgent: linkedAgent.toLowerCase() !== zero.toLowerCase() ? linkedAgent : null,
   };
+}
+
+async function writeWithGasCap(
+  client: WalletClient,
+  request: Parameters<WalletClient["writeContract"]>[0],
+  gasFallback = 300_000n,
+): Promise<Hex> {
+  const publicClient = createPublicClient({ chain: PHAROS_CHAIN, transport: http(PHAROS_RPC) });
+  try {
+    await publicClient.simulateContract(request as never);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message);
+  }
+
+  let gas = gasFallback;
+  try {
+    const estimated = await publicClient.estimateContractGas(request as never);
+    gas = estimated > 2_000_000n ? 2_000_000n : estimated;
+  } catch {
+    gas = gasFallback;
+  }
+
+  return client.writeContract({ ...request, gas } as Parameters<WalletClient["writeContract"]>[0]);
 }
 
 export async function registerAgentOnChain(
@@ -63,14 +101,27 @@ export async function registerAgentOnChain(
   wallet: Hex,
   agent: Hex,
 ): Promise<Hex> {
-  return client.writeContract({
+  const linked = (await publicClient.readContract({
+    address: CONTRACTS.identityRegistry,
+    abi: IDENTITY_REGISTRY_ABI,
+    functionName: "agentOfOwner",
+    args: [wallet],
+  })) as Hex;
+  const zero = "0x0000000000000000000000000000000000000000";
+  if (linked.toLowerCase() !== zero) {
+    throw new Error(
+      `This wallet already owns agent ${linked}. Use that agent for approvals — do not register again.`,
+    );
+  }
+
+  return writeWithGasCap(client, {
     address: CONTRACTS.identityRegistry,
     abi: IDENTITY_REGISTRY_ABI,
     functionName: "register",
     chain: PHAROS_CHAIN,
     account: wallet,
     args: [agent, "ipfs://covenant-agent-proof"],
-  } as Parameters<WalletClient["writeContract"]>[0]);
+  });
 }
 
 export function tierCurveRefFromCovenant(covenant: { tierLimits?: { tier: number; maxValueWei: string }[] }): Hex {
@@ -84,12 +135,12 @@ export async function publishCovenantOnChain(
   covenantHash: Hex,
   covenant: { tierLimits?: { tier: number; maxValueWei: string }[] },
 ): Promise<Hex> {
-  return client.writeContract({
+  return writeWithGasCap(client, {
     address: CONTRACTS.covenantRegistry,
     abi: COVENANT_REGISTRY_ABI,
     functionName: "setCovenant",
     chain: PHAROS_CHAIN,
     account: wallet,
     args: [agent, covenantHash, tierCurveRefFromCovenant(covenant), "ipfs://covenant-policy-proof"],
-  } as Parameters<WalletClient["writeContract"]>[0]);
+  });
 }
