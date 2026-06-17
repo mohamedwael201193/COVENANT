@@ -11,8 +11,8 @@ services:
       corepack enable &&
       pnpm install --frozen-lockfile &&
       pnpm generate:abis &&
-      pnpm --filter @covenant/shared build &&
-      pnpm --filter @covenant/skill build &&
+      pnpm --filter covenant-shared build &&
+      pnpm --filter covenant-skill build &&
       pnpm --filter @covenant/indexer build
     startCommand: bash scripts/render-start-backend.sh
     healthCheckPath: /health
