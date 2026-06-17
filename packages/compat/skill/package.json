@@ -1,0 +1,11 @@
+{
+  "name": "@covenant/skill",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Render/CI alias → covenant-skill",
+  "scripts": {
+    "build": "pnpm --filter covenant-skill run build",
+    "typecheck": "pnpm --filter covenant-skill run typecheck",
+    "dev": "pnpm --filter covenant-skill run dev"
+  }
+}

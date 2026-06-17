@@ -1,0 +1,10 @@
+{
+  "name": "@covenant/shared",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Render/CI alias → covenant-shared",
+  "scripts": {
+    "build": "pnpm --filter covenant-shared run build",
+    "typecheck": "pnpm --filter covenant-shared run typecheck"
+  }
+}

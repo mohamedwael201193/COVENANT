@@ -7,13 +7,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: >-
-      corepack enable &&
-      pnpm install --frozen-lockfile &&
-      pnpm generate:abis &&
-      pnpm --filter covenant-shared build &&
-      pnpm --filter covenant-skill build &&
-      pnpm --filter @covenant/indexer build
+    buildCommand: bash scripts/render-build.sh
     startCommand: bash scripts/render-start-backend.sh
     healthCheckPath: /health
     envVars:
