@@ -121,7 +121,7 @@ export async function handleCreateSession(args: unknown) {
     permissions: session.permissions,
     expiresAt: new Date(session.expiresAt).toISOString(),
     maxSpendWei: session.maxSpendWei,
-    successUrl: `${process.env.COVENANT_DASHBOARD_URL?.replace(/\/$/, "") ?? "https://covenant-web-mu.vercel.app"}/connect/success?sessionId=${session.id}`,
+    successUrl: `${process.env.COVENANT_DASHBOARD_URL?.replace(/\/$/, "") ?? "https://covenant-skill.vercel.app"}/connect/success?sessionId=${session.id}`,
   };
 }
 

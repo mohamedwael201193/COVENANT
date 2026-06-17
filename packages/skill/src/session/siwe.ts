@@ -1,7 +1,7 @@
 export function getDashboardBase(): string {
   return (
     process.env.COVENANT_DASHBOARD_URL?.replace(/\/$/, "") ??
-    "https://covenant-web-mu.vercel.app"
+    "https://covenant-skill.vercel.app"
   );
 }
 

@@ -4,7 +4,7 @@ import {
   type Hex,
   type WalletClient,
 } from "viem";
-import { PHAROS_CHAIN, PHAROS_CHAIN_ID_HEX } from "./pharos";
+import { PHAROS_CHAIN, PHAROS_CHAIN_ID, PHAROS_CHAIN_ID_HEX } from "./pharos";
 
 type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -12,6 +12,26 @@ type EthereumProvider = {
 
 export function getEthereum(): EthereumProvider | undefined {
   return (window as unknown as { ethereum?: EthereumProvider }).ethereum;
+}
+
+export async function getWalletChainId(): Promise<number | null> {
+  const provider = getEthereum();
+  if (!provider) return null;
+  const hex = (await provider.request({ method: "eth_chainId" })) as string;
+  return Number.parseInt(hex, 16);
+}
+
+const STALE_PHAROS_CHAIN_ID = 688545;
+
+export function formatChainMismatchMessage(current: number): string {
+  if (current === STALE_PHAROS_CHAIN_ID) {
+    return (
+      "MetaMask is on an outdated Pharos network (chain 688545). " +
+      "Remove that network in MetaMask, then add Pharos Atlantic with chain ID 688689 " +
+      "(RPC: https://atlantic.dplabs-internal.com)."
+    );
+  }
+  return `Switch MetaMask to Pharos Atlantic (chain ID ${PHAROS_CHAIN_ID}). Currently on chain ${current}.`;
 }
 
 export async function ensurePharosChain(provider: EthereumProvider): Promise<void> {
@@ -49,9 +69,7 @@ export async function ensurePharosChain(provider: EthereumProvider): Promise<voi
 
   const chainId = await readChainId();
   if (chainId !== PHAROS_CHAIN_ID) {
-    throw new Error(
-      `Switch MetaMask to Pharos Atlantic (chain ID ${PHAROS_CHAIN_ID}). Currently on chain ${chainId}.`,
-    );
+    throw new Error(formatChainMismatchMessage(chainId));
   }
 }
 
