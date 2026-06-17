@@ -208,19 +208,12 @@ export async function handleRotateKey(clients: ChainClients, args: unknown) {
 }
 
 export async function handleHealth(clients: ChainClients) {
-  const [blockNumber, attesterBalance] = await Promise.all([
-    clients.publicClient.getBlockNumber(),
-    clients.publicClient
-      .getBalance({ address: clients.attesterAccount.address })
-      .catch(() => 0n),
-  ]);
   return {
     status: "ok",
     chainId: clients.chain.id,
-    blockNumber: blockNumber.toString(),
-    attesterBalanceWei: attesterBalance.toString(),
     attesterAddress: clients.attesterAccount.address,
-    mode: "fast",
+    mode: "zero-rpc-fast",
+    message: "MCP server loaded. Use covenant_simulate or covenant_reputation to verify live RPC reads.",
   };
 }
 

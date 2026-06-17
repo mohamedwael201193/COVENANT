@@ -138,7 +138,7 @@ function getContextForTool(name: ToolName): McpContext {
 
 export function createMcpServer(log: Logger): Server {
   const server = new Server(
-    { name: "covenant", version: "0.2.1" },
+    { name: "covenant", version: "0.2.4" },
     {
       capabilities: { tools: {} },
       instructions: MCP_SERVER_INSTRUCTIONS,

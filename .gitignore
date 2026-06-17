@@ -24,3 +24,5 @@ Thumbs.db
 .sbom/
 certik-reports/
 *.tgz
+projects.md
+WINNING_GAPS.md

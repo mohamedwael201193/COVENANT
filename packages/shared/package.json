@@ -1,6 +1,6 @@
 {
   "name": "covenant-shared",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "description": "Shared chain config, types, and contract ABIs for COVENANT agent trust on Pharos",
   "type": "module",
   "license": "MIT",

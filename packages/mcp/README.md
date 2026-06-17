@@ -121,7 +121,25 @@ Full schemas: [docs/MCP_REFERENCE.md](../../docs/MCP_REFERENCE.md)
 
 ---
 
-## 8. Hosted API (no local install)
+## 8. Hosted MCP + API (no local install)
+
+Remote MCP endpoint:
+
+```text
+https://covenant-skill.onrender.com/mcp
+```
+
+Cursor / Claude remote config:
+
+```json
+{
+  "mcpServers": {
+    "covenant": {
+      "url": "https://covenant-skill.onrender.com/mcp"
+    }
+  }
+}
+```
 
 | Endpoint | Purpose |
 |---|---|

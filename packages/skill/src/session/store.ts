@@ -3,31 +3,45 @@ import * as memory from "./memoryStore.js";
 import * as pg from "./pgStore.js";
 
 function usePostgres(): boolean {
-  if (process.env.COVENANT_SESSION_STORE === "memory") return false;
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return false;
+  }
   return Boolean(process.env.DATABASE_URL);
+}
+
+function requirePersistentStore(): never {
+  throw new Error(
+    "Persistent session store required. Set DATABASE_URL, or set COVENANT_SESSION_STORE=memory only for tests.",
+  );
 }
 
 export { getDashboardBase } from "./siwe.js";
 
 export async function createSiweChallenge(walletAddress: `0x${string}`): Promise<SiweChallenge> {
-  return usePostgres()
-    ? pg.createSiweChallengePg(walletAddress)
-    : memory.createSiweChallengeMemory(walletAddress);
+  if (usePostgres()) return pg.createSiweChallengePg(walletAddress);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.createSiweChallengeMemory(walletAddress);
+  }
+  return requirePersistentStore();
 }
 
 export async function getSiweChallenge(
   walletAddress: string,
   nonce: string,
 ): Promise<{ message: string; expiresAt: number } | undefined> {
-  return usePostgres()
-    ? pg.getSiweChallengePg(walletAddress, nonce)
-    : memory.getSiweChallengeMemory(walletAddress, nonce);
+  if (usePostgres()) return pg.getSiweChallengePg(walletAddress, nonce);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.getSiweChallengeMemory(walletAddress, nonce);
+  }
+  return requirePersistentStore();
 }
 
 export async function verifySiweNonce(walletAddress: string, nonce: string): Promise<boolean> {
-  return usePostgres()
-    ? pg.verifySiweNoncePg(walletAddress, nonce)
-    : memory.verifySiweNonceMemory(walletAddress, nonce);
+  if (usePostgres()) return pg.verifySiweNoncePg(walletAddress, nonce);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.verifySiweNonceMemory(walletAddress, nonce);
+  }
+  return requirePersistentStore();
 }
 
 export async function createSession(input: {
@@ -37,15 +51,27 @@ export async function createSession(input: {
   maxSpendWei?: string;
   durationDays: number;
 }): Promise<CovenantSession> {
-  return usePostgres() ? pg.createSessionPg(input) : memory.createSessionMemory(input);
+  if (usePostgres()) return pg.createSessionPg(input);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.createSessionMemory(input);
+  }
+  return requirePersistentStore();
 }
 
 export async function getSession(sessionId: string): Promise<CovenantSession | undefined> {
-  return usePostgres() ? pg.getSessionPg(sessionId) : memory.getSessionMemory(sessionId);
+  if (usePostgres()) return pg.getSessionPg(sessionId);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.getSessionMemory(sessionId);
+  }
+  return requirePersistentStore();
 }
 
 export async function revokeSession(sessionId: string): Promise<boolean> {
-  return usePostgres() ? pg.revokeSessionPg(sessionId) : memory.revokeSessionMemory(sessionId);
+  if (usePostgres()) return pg.revokeSessionPg(sessionId);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.revokeSessionMemory(sessionId);
+  }
+  return requirePersistentStore();
 }
 
 export async function createApproval(input: {
@@ -56,17 +82,27 @@ export async function createApproval(input: {
   preflightSummary: Record<string, unknown>;
   executionPayload?: Record<string, unknown>;
 }): Promise<ApprovalRequest> {
-  return usePostgres() ? pg.createApprovalPg(input) : memory.createApprovalMemory(input);
+  if (usePostgres()) return pg.createApprovalPg(input);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.createApprovalMemory(input);
+  }
+  return requirePersistentStore();
 }
 
 export async function getApproval(id: string): Promise<ApprovalRequest | undefined> {
-  return usePostgres() ? pg.getApprovalPg(id) : memory.getApprovalMemory(id);
+  if (usePostgres()) return pg.getApprovalPg(id);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.getApprovalMemory(id);
+  }
+  return requirePersistentStore();
 }
 
 export async function listPendingApprovals(sessionId: string): Promise<ApprovalRequest[]> {
-  return usePostgres()
-    ? pg.listPendingApprovalsPg(sessionId)
-    : memory.listPendingApprovalsMemory(sessionId);
+  if (usePostgres()) return pg.listPendingApprovalsPg(sessionId);
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.listPendingApprovalsMemory(sessionId);
+  }
+  return requirePersistentStore();
 }
 
 export async function updateApprovalStatus(
@@ -74,9 +110,11 @@ export async function updateApprovalStatus(
   status: ApprovalRequest["status"],
   extra?: { txHash?: string; decisionId?: string },
 ): Promise<ApprovalRequest | undefined> {
-  return usePostgres()
-    ? pg.updateApprovalPg(id, { status, ...extra })
-    : memory.updateApprovalMemory(id, { status, ...extra });
+  if (usePostgres()) return pg.updateApprovalPg(id, { status, ...extra });
+  if (process.env.COVENANT_SESSION_STORE === "memory" || process.env.NODE_ENV === "test") {
+    return memory.updateApprovalMemory(id, { status, ...extra });
+  }
+  return requirePersistentStore();
 }
 
 /** Test helper */

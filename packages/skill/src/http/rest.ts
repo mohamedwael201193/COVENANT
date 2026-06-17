@@ -24,6 +24,7 @@ import { handleSetCovenant } from "../tools/index.js";
 import { setCovenantSchema } from "../engine/schema.js";
 import { registerHealthRoutes, collectHealthState } from "./health.js";
 import { registerSseRoutes } from "./sse.js";
+import { registerMcpHttpRoutes } from "./mcp.js";
 import {
   handleConnectWallet,
   handleCreateSession,
@@ -47,6 +48,7 @@ export function createRestApp(ctx: RestContext): Express {
 
   registerHealthRoutes(app, () => collectHealthState(ctx.clients), ctx.log);
   registerSseRoutes(app, ctx.log);
+  registerMcpHttpRoutes(app, ctx);
 
   app.get("/api/agents", async (_req, res) => {
     try {

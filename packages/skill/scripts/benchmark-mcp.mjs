@@ -17,11 +17,11 @@ const env = {
 };
 
 const TARGETS = {
-  startup: 3000,
+  startup: 500,
   covenant_health: 1000,
-  covenant_reputation: 2000,
-  covenant_simulate: 3000,
-  covenant_preflight: 5000,
+  covenant_reputation: 500,
+  covenant_simulate: 1500,
+  covenant_preflight: 2000,
 };
 
 async function timed(label, fn) {

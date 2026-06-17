@@ -9,8 +9,9 @@ loadDotenv({ path: resolve(import.meta.dirname, "../../../.env") });
 
 const chainConfig = loadChainConfig(process.env);
 const rpcUrl = process.env.PHAROS_RPC_URL ?? chainConfig.rpcUrls.default.http[0];
+const runLive = process.env.COVENANT_LIVE_RPC_TESTS === "true";
 
-describe("Pharos testnet read-only integration", () => {
+describe.skipIf(!runLive)("Pharos testnet read-only integration", () => {
   it("connects to Pharos Atlantic RPC with expected chainId", async () => {
     const client = createPublicClient({ transport: http(rpcUrl) });
     const chainId = await client.getChainId();
