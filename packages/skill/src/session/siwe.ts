@@ -6,8 +6,8 @@ export function getDashboardBase(): string {
 }
 
 export function buildSiweMessage(walletAddress: string, nonce: string): string {
-  const domain = "covenant.pharos";
   const uri = getDashboardBase();
+  const domain = new URL(uri).host;
   const issuedAt = new Date().toISOString();
   return `${domain} wants you to sign in with your Ethereum account:
 ${walletAddress}

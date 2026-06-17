@@ -4,6 +4,7 @@ import type { PreflightServices } from "../engine/preflightEvaluate.js";
 import type { ChainClients } from "../chain/clients.js";
 import { dispatchTool } from "../tools/index.js";
 import { MCP_SERVER_INSTRUCTIONS, resolveToolName, toolDefinitions } from "../mcp/definitions.js";
+import { jsonSafeStringify } from "../util/json.js";
 
 interface McpHttpContext {
   clients: ChainClients;
@@ -32,7 +33,7 @@ async function handleJsonRpc(req: JsonRpcRequest, ctx: McpHttpContext) {
       return jsonRpcResult(req.id, {
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: { name: "covenant", version: "0.2.6" },
+        serverInfo: { name: "covenant", version: "0.2.7" },
         instructions: MCP_SERVER_INSTRUCTIONS,
       });
 
@@ -61,7 +62,7 @@ async function handleJsonRpc(req: JsonRpcRequest, ctx: McpHttpContext) {
           services: ctx.services,
         });
         return jsonRpcResult(req.id, {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: jsonSafeStringify(result, 2) }],
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

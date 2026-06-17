@@ -1,3 +1,5 @@
+import { jsonSafeStringify } from "../util/json.js";
+
 /** Optional hosted COVENANT skill for attestation signing (no local keys). */
 export async function hostedSignAttestation(
   apiBase: string,
@@ -7,7 +9,7 @@ export async function hostedSignAttestation(
   const res = await fetch(`${base}/api/attest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: jsonSafeStringify(body),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -24,7 +26,7 @@ export async function hostedPreflightEvaluate(
   const res = await fetch(`${base}/api/preflight/evaluate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: jsonSafeStringify(body),
   });
   if (!res.ok) {
     const text = await res.text();

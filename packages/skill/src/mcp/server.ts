@@ -18,6 +18,7 @@ import {
 } from "./definitions.js";
 import { loadMcpConfig, resolveOwnerPrivateKey, type McpEnv } from "./config.js";
 import type { PreflightServices } from "../engine/preflightEvaluate.js";
+import { jsonSafeStringify } from "../util/json.js";
 
 const PUBLIC_TOOLS = new Set<ToolName>([
   "covenant_health",
@@ -138,7 +139,7 @@ function getContextForTool(name: ToolName): McpContext {
 
 export function createMcpServer(log: Logger): Server {
   const server = new Server(
-    { name: "covenant", version: "0.2.6" },
+    { name: "covenant", version: "0.2.7" },
     {
       capabilities: { tools: {} },
       instructions: MCP_SERVER_INSTRUCTIONS,
@@ -171,13 +172,13 @@ export function createMcpServer(log: Logger): Server {
         getContextForTool(name) as { clients: import("../chain/clients.js").ChainClients; services: PreflightServices },
       );
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        content: [{ type: "text", text: jsonSafeStringify(result, 2) }],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       log.error({ err: error, tool: name }, "MCP tool failed");
       return {
-        content: [{ type: "text", text: JSON.stringify({ error: message }) }],
+        content: [{ type: "text", text: jsonSafeStringify({ error: message }) }],
         isError: true,
       };
     }
