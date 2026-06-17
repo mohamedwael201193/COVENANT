@@ -1,12 +1,23 @@
 {
   "name": "@covenant/skill",
   "version": "0.1.0",
-  "private": true,
+  "description": "COVENANT skill engine — preflight, attestation, and chain layer",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./mcp": {
+      "import": "./dist/mcp/index.js",
+      "types": "./dist/mcp/index.d.ts"
+    }
+  },
   "bin": {
-    "covenant-skill": "./dist/index.js"
+    "covenant-skill": "./dist/index.js",
+    "covenant-mcp": "./dist/mcp/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -28,6 +39,13 @@
     "viem": "^2.23.2",
     "zod": "^3.24.2"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",

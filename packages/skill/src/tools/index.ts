@@ -29,6 +29,7 @@ import {
   verifyCounterpartySchema,
   verdictLabel,
 } from "../engine/schema.js";
+import { collectHealthState } from "../http/health.js";
 
 function ownerWallet(clients: ChainClients, privateKey: `0x${string}`) {
   const account = privateKeyToAccount(privateKey);
@@ -165,117 +166,25 @@ export async function handleRotateKey(clients: ChainClients, args: unknown) {
   return { txHash: hash, newAgent: input.newAgent };
 }
 
-export const toolDefinitions = [
-  {
-    name: "registerIdentity",
-    description: "Register an agent key with metadata URI on IdentityRegistry",
-    inputSchema: {
-      type: "object",
-      properties: {
-        agent: { type: "string" },
-        metadataURI: { type: "string" },
-        ownerPrivateKey: { type: "string" },
-      },
-      required: ["agent", "metadataURI", "ownerPrivateKey"],
-    },
-  },
-  {
-    name: "setCovenant",
-    description: "Set covenant hash and IPFS URI for an agent",
-    inputSchema: {
-      type: "object",
-      properties: {
-        agent: { type: "string" },
-        covenant: { type: "object" },
-        ipfsURI: { type: "string" },
-        ownerPrivateKey: { type: "string" },
-      },
-      required: ["agent", "covenant", "ipfsURI", "ownerPrivateKey"],
-    },
-  },
-  {
-    name: "preflight",
-    description: "Run deterministic preflight (rules + simulation + GoPlus) and sign ALLOW if permitted",
-    inputSchema: {
-      type: "object",
-      properties: {
-        intent: { type: "object" },
-        covenant: { type: "object" },
-        covenantHash: { type: "string" },
-        counterpartyTier: { type: "number" },
-        deadlineSeconds: { type: "number" },
-      },
-      required: ["intent", "covenant", "covenantHash"],
-    },
-  },
-  {
-    name: "simulate",
-    description: "Simulate an intent via eth_call and eth_estimateGas",
-    inputSchema: {
-      type: "object",
-      properties: {
-        intent: { type: "object" },
-        from: { type: "string" },
-      },
-      required: ["intent"],
-    },
-  },
-  {
-    name: "verifyCounterparty",
-    description: "GoPlus counterparty and contract risk read",
-    inputSchema: {
-      type: "object",
-      properties: { address: { type: "string" } },
-      required: ["address"],
-    },
-  },
-  {
-    name: "attestOutcome",
-    description: "Oracle write to ReputationRegistry with DecisionLog provenance",
-    inputSchema: {
-      type: "object",
-      properties: {
-        agent: { type: "string" },
-        score: { type: "string" },
-        tier: { type: "number" },
-        decisionIds: { type: "array", items: { type: "string" } },
-      },
-      required: ["agent", "score", "tier", "decisionIds"],
-    },
-  },
-  {
-    name: "getReceipt",
-    description: "Read a DecisionLog receipt by id",
-    inputSchema: {
-      type: "object",
-      properties: { decisionId: { type: "string" } },
-      required: ["decisionId"],
-    },
-  },
-  {
-    name: "reputation",
-    description: "Read Trust Capital score and tier for an agent",
-    inputSchema: {
-      type: "object",
-      properties: { agent: { type: "string" } },
-      required: ["agent"],
-    },
-  },
-  {
-    name: "rotateKey",
-    description: "Rotate agent key for the calling owner",
-    inputSchema: {
-      type: "object",
-      properties: {
-        newAgent: { type: "string" },
-        ownerPrivateKey: { type: "string" },
-      },
-      required: ["newAgent", "ownerPrivateKey"],
-    },
-  },
-] as const;
+export async function handleHealth(clients: ChainClients) {
+  const health = await collectHealthState(clients);
+  return {
+    status: health.attesterMatch ? "ok" : "degraded",
+    attesterMatch: health.attesterMatch,
+    attesterBalanceWei: health.attesterBalance.toString(),
+    chainId: clients.chain.id,
+  };
+}
 
-export type ToolName = (typeof toolDefinitions)[number]["name"];
+export {
+  toolDefinitions,
+  toolAliases,
+  resolveToolName,
+  MCP_SERVER_INSTRUCTIONS,
+  type ToolName,
+} from "../mcp/definitions.js";
+
+import type { ToolName } from "../mcp/definitions.js";
 
 export async function dispatchTool(
   name: ToolName,
@@ -283,23 +192,25 @@ export async function dispatchTool(
   ctx: { clients: ChainClients; services: PreflightServices },
 ): Promise<unknown> {
   switch (name) {
-    case "registerIdentity":
+    case "covenant_health":
+      return handleHealth(ctx.clients);
+    case "covenant_register_identity":
       return handleRegisterIdentity(ctx.clients, args);
-    case "setCovenant":
+    case "covenant_set_covenant":
       return handleSetCovenant(ctx.clients, args);
-    case "preflight":
+    case "covenant_preflight":
       return handlePreflight(ctx.services, args);
-    case "simulate":
+    case "covenant_simulate":
       return handleSimulate(ctx.clients, args);
-    case "verifyCounterparty":
+    case "covenant_verify_counterparty":
       return handleVerifyCounterparty(ctx.services.env, args);
-    case "attestOutcome":
+    case "covenant_attest_outcome":
       return handleAttestOutcome(ctx.clients, args);
-    case "getReceipt":
+    case "covenant_get_receipt":
       return handleGetReceipt(ctx.clients, args);
-    case "reputation":
+    case "covenant_reputation":
       return handleReputation(ctx.clients, args);
-    case "rotateKey":
+    case "covenant_rotate_key":
       return handleRotateKey(ctx.clients, args);
     default: {
       const _exhaustive: never = name;

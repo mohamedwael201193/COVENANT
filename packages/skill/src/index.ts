@@ -1,10 +1,4 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import type { Server as HttpServer } from "node:http";
 import pino from "pino";
 import { loadConfig, resolveSkillPort, shouldEnableMcpStdio, shouldEnableDecisionWatcher } from "./config.js";
@@ -15,7 +9,7 @@ import { startDecisionWatcher } from "./chain/watchers.js";
 import { createRestApp } from "./http/rest.js";
 import { collectHealthState } from "./http/health.js";
 import { probeRpcCapabilities } from "./engine/simulator.js";
-import { dispatchTool, toolDefinitions } from "./tools/index.js";
+import { runMcpStdio, setMcpContext } from "./mcp/server.js";
 
 const log = pino({ name: "covenant-skill", level: process.env.LOG_LEVEL ?? "info" });
 
@@ -86,42 +80,8 @@ async function main(): Promise<void> {
     return;
   }
 
-  const server = new Server(
-    { name: "covenant-skill", version: "0.1.0" },
-    { capabilities: { tools: {} } },
-  );
-
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: toolDefinitions.map((t) => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema,
-    })),
-  }));
-
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const name = request.params.name as (typeof toolDefinitions)[number]["name"];
-    try {
-      const result = await dispatchTool(name, request.params.arguments ?? {}, {
-        clients,
-        services,
-      });
-      return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      log.error({ err: error, tool: name }, "tool call failed");
-      return {
-        content: [{ type: "text", text: JSON.stringify({ error: message }) }],
-        isError: true,
-      };
-    }
-  });
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  log.info("MCP stdio transport connected");
+  setMcpContext({ clients, services });
+  await runMcpStdio(log);
 }
 
 main().catch((error) => {

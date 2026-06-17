@@ -69,6 +69,19 @@ importers:
         specifier: ^3.0.5
         version: 3.2.6(@types/node@22.19.21)(jiti@2.7.0)(jsdom@26.1.0)(tsx@4.22.4)
 
+  packages/mcp:
+    dependencies:
+      '@covenant/skill':
+        specifier: workspace:*
+        version: link:../skill
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.19.21
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/security/certik:
     dependencies:
       dotenv:

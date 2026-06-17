@@ -20,7 +20,9 @@
     "smoke:production": "pnpm exec tsx scripts/smoke-production.ts",
     "prove:trust-capital": "pnpm exec tsx scripts/prove-trust-capital.ts",
     "bench:preflight": "pnpm exec tsx scripts/benchmark-preflight.ts",
-    "demo:live": "pnpm --filter @covenant/skill exec tsx scripts/demo-live.ts"
+    "demo:live": "pnpm --filter @covenant/skill exec tsx scripts/demo-live.ts",
+    "mcp:init": "node packages/mcp/scripts/init.mjs",
+    "mcp:build": "pnpm --filter @covenant/skill build && pnpm --filter @covenant/mcp build"
   },
   "engines": {
     "node": ">=20"

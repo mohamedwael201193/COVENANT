@@ -35,9 +35,9 @@ IDENTITY → COVENANT → CERTIFICATION (rules + simulation + GoPlus) → GUARDE
 ```
 
 - **Deterministic safety core:** LLM explains only; never authorizes funds
-- **MCP Skill server:** `packages/skill` (stdio MCP + REST on `:8787`)
+- **MCP Skill:** `@covenant/mcp` (stdio) + REST host `packages/skill` `:8787`
 - **Indexer:** `packages/indexer` (BullMQ + Postgres projections)
-- **Dashboard:** `packages/web` (React + Vite + TanStack Query + shadcn/ui)
+- **Dashboard (demo):** `packages/web`
 
 ## Quick Start
 
@@ -61,9 +61,26 @@ pnpm dev:web      # dashboard :5173
 curl http://localhost:8787/health
 ```
 
-## MCP Tools
+**The credible-commitment MCP skill for autonomous agents** — install with `npx @covenant/mcp init`. Dashboard is demo-only.
 
-`registerIdentity`, `setCovenant`, `preflight`, `simulate`, `verifyCounterparty`, `attestOutcome`, `getReceipt`, `reputation`, `rotateKey`
+## Agent skill (primary product)
+
+```bash
+npx @covenant/mcp init
+```
+
+| Doc | Description |
+|---|---|
+| [AGENTS.md](../AGENTS.md) | Agent skill manifest |
+| [skill/INSTALL.md](./skill/INSTALL.md) | 5-minute install |
+| [skill/EXAMPLES.md](./skill/EXAMPLES.md) | Send-money workflow |
+| [packages/mcp/README.md](../packages/mcp/README.md) | `@covenant/mcp` package |
+
+## MCP Tools (10)
+
+`covenant_health`, `covenant_reputation`, `covenant_preflight`, `covenant_simulate`, `covenant_verify_counterparty`, `covenant_get_receipt`, `covenant_register_identity`, `covenant_set_covenant`, `covenant_rotate_key`, `covenant_attest_outcome`
+
+Legacy aliases (`preflight`, `reputation`, …) still work.
 
 See [MCP_REFERENCE.md](./MCP_REFERENCE.md) for full schemas.
 
@@ -75,7 +92,7 @@ See [MCP_REFERENCE.md](./MCP_REFERENCE.md) for full schemas.
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Render, env vars, Vercel, contract addresses |
 | [SECURITY.md](./SECURITY.md) | Egress allowlist, non-custodial, threat model |
 | [API_REFERENCE.md](./API_REFERENCE.md) | REST endpoints (skill + indexer) |
-| [MCP_REFERENCE.md](./MCP_REFERENCE.md) | 9 MCP tools |
+| [MCP_REFERENCE.md](./MCP_REFERENCE.md) | 10 MCP tools (`covenant_*`) |
 | [OPERATIONS.md](./OPERATIONS.md) | Health, monitoring, oracle, indexer lag |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Common errors and fixes |
 

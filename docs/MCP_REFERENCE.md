@@ -1,30 +1,35 @@
 # COVENANT MCP Reference
 
-The skill server (`packages/skill`) exposes **9 MCP tools** over stdio when `MCP_STDIO_ENABLED=true` (default on local TTY; disabled on Render).
+Install: `npx @covenant/mcp` · Package: `@covenant/mcp` · See [docs/skill/INSTALL.md](./skill/INSTALL.md)
 
-Server metadata: `{ name: "covenant-skill", version: "0.1.0" }`
+The MCP server exposes **10 tools** (prefixed `covenant_*`) over stdio. Legacy names (`preflight`, `reputation`, …) still resolve.
 
-Tool results are returned as JSON text in MCP `content[0].text`. Errors set `isError: true`.
+Server metadata: `{ name: "covenant", version: "0.1.0" }` with workflow **instructions** on initialize.
+
+Tool results are JSON in MCP `content[0].text`. Errors set `isError: true`.
 
 ---
 
 ## Tool Summary
 
-| Tool | Mutates chain | Description |
+| Tool | Read-only | Description |
 |---|---|---|
-| `registerIdentity` | Yes | Register agent on IdentityRegistry |
-| `setCovenant` | Yes | Set covenant hash + IPFS URI |
-| `preflight` | Signs only | Deterministic preflight + ALLOW attestation |
-| `simulate` | No | eth_call + eth_estimateGas |
-| `verifyCounterparty` | No | GoPlus risk read |
-| `attestOutcome` | Yes | Oracle reputation write |
-| `getReceipt` | No | Read DecisionLog receipt |
-| `reputation` | No | Read Trust Capital score |
-| `rotateKey` | Yes | Rotate agent key |
+| `covenant_health` | ✓ | RPC + attester connectivity |
+| `covenant_reputation` | ✓ | Trust Capital score/tier |
+| `covenant_preflight` | | Deterministic preflight + ALLOW attestation |
+| `covenant_simulate` | ✓ | eth_call + eth_estimateGas |
+| `covenant_verify_counterparty` | ✓ | GoPlus risk read |
+| `covenant_get_receipt` | ✓ | Read DecisionLog receipt |
+| `covenant_register_identity` | | Register agent on IdentityRegistry |
+| `covenant_set_covenant` | | Set covenant hash + IPFS URI |
+| `covenant_rotate_key` | | Rotate agent key |
+| `covenant_attest_outcome` | | Oracle reputation write |
+
+**Aliases:** `preflight` → `covenant_preflight`, `reputation` → `covenant_reputation`, etc.
 
 ---
 
-## 1. `registerIdentity`
+## 1. `covenant_register_identity` (alias: `registerIdentity`)
 
 Register an agent key with metadata URI on `IdentityRegistry`.
 

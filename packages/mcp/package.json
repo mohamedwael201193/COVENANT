@@ -1,0 +1,48 @@
+{
+  "name": "@covenant/mcp",
+  "version": "0.1.0",
+  "description": "COVENANT MCP server — Stripe for Agent Trust on Pharos Atlantic",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohamedwael201193/COVENANT.git",
+    "directory": "packages/mcp"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pharos",
+    "agent-trust",
+    "covenant",
+    "ai-agent"
+  ],
+  "bin": {
+    "covenant-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "config",
+    "README.md",
+    "SKILL.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "init": "node scripts/init.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@covenant/skill": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

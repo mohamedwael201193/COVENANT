@@ -1,22 +1,28 @@
 {
-  "name": "covenant-skill",
+  "name": "covenant",
   "version": "0.1.0",
-  "description": "COVENANT MCP skill — credible-commitment layer for autonomous agents on Pharos Atlantic testnet",
-  "transport": ["stdio", "http"],
+  "description": "Stripe for Agent Trust — MCP server for Pharos Atlantic agent preflight",
+  "package": "@covenant/mcp",
+  "install": "npx @covenant/mcp init",
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["-y", "@covenant/mcp"],
+  "chainId": 688689,
   "tools": [
-    "registerIdentity",
-    "setCovenant",
-    "preflight",
-    "simulate",
-    "verifyCounterparty",
-    "attestOutcome",
-    "getReceipt",
-    "reputation",
-    "rotateKey"
+    "covenant_health",
+    "covenant_reputation",
+    "covenant_preflight",
+    "covenant_simulate",
+    "covenant_verify_counterparty",
+    "covenant_get_receipt",
+    "covenant_register_identity",
+    "covenant_set_covenant",
+    "covenant_rotate_key",
+    "covenant_attest_outcome"
   ],
-  "capabilities": {
-    "preflight": "Deterministic rules + eth_call simulation + GoPlus risk → signed ALLOW/WARN/DENY",
-    "chainId": 688689,
-    "network": "Pharos Atlantic Testnet"
+  "docs": {
+    "install": "../../docs/skill/INSTALL.md",
+    "examples": "../../docs/skill/EXAMPLES.md",
+    "agents": "../../AGENTS.md"
   }
 }
