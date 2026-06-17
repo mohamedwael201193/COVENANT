@@ -6,8 +6,8 @@ export const PHAROS_ATLANTIC_CHAIN_ID = 688689;
 /** Block number of initial contract deployment on Atlantic testnet */
 export const DEFAULT_INDEXER_START_BLOCK = 24_340_730n;
 
-export const DEFAULT_RPC_URL =
-  "https://api.zan.top/node/v1/pharos/atlantic/eba2f87ee4174f41bac3cc6bfc02a4d1";
+/** Public Pharos Atlantic RPC — no API key required. Override with PHAROS_RPC_URL if needed. */
+export const DEFAULT_RPC_URL = "https://atlantic-rpc.pharosnetwork.xyz";
 
 export const DEFAULT_CONTRACTS = {
   identityRegistry: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323" as Address,

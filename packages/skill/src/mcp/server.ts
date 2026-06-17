@@ -17,75 +17,42 @@ import {
   type ToolName,
 } from "./definitions.js";
 import { loadMcpConfig, resolveOwnerPrivateKey, type McpEnv } from "./config.js";
+import type { PreflightServices } from "../engine/preflightEvaluate.js";
 
-const READ_ONLY_TOOLS = new Set<ToolName>([
+const PUBLIC_TOOLS = new Set<ToolName>([
   "covenant_health",
   "covenant_reputation",
   "covenant_get_receipt",
   "covenant_simulate",
-]);
-
-const GOPLUS_TOOLS = new Set<ToolName>([
-  "covenant_verify_counterparty",
   "covenant_preflight",
+  "covenant_verify_counterparty",
+  "covenant_sign_attestation",
+  "covenant_connect_wallet",
+  "covenant_create_session",
+  "covenant_request_approval",
+  "covenant_get_pending_approvals",
+  "covenant_execute_authorized",
+  "covenant_revoke_session",
 ]);
 
-function mcpEnvToSkillEnv(mcp: McpEnv): EnvConfig {
-  const pk = resolveOwnerPrivateKey(mcp);
-  if (!pk) {
-    throw new Error(
-      "Set DEPLOYER_PRIVATE_KEY or COVENANT_OWNER_PRIVATE_KEY in MCP server env for this tool.",
-    );
-  }
-  if (!mcp.GOPLUS_APP_KEY || !mcp.GOPLUS_APP_SECRET) {
-    throw new Error("Set GOPLUS_APP_KEY and GOPLUS_APP_SECRET in MCP server env for this tool.");
-  }
-  return {
-    PHAROS_CHAIN_ID: mcp.PHAROS_CHAIN_ID,
-    PHAROS_RPC_URL: mcp.PHAROS_RPC_URL,
-    PHAROS_RPC_URL_FALLBACK: mcp.PHAROS_RPC_URL_FALLBACK,
-    DEPLOYER_PRIVATE_KEY: pk,
-    GOPLUS_APP_KEY: mcp.GOPLUS_APP_KEY,
-    GOPLUS_APP_SECRET: mcp.GOPLUS_APP_SECRET,
-    GOPLUS_API_BASE: mcp.GOPLUS_API_BASE,
-    PREFLIGHT_LLM_ENABLED: mcp.PREFLIGHT_LLM_ENABLED,
-    PREFLIGHT_LLM_TIMEOUT_MS: mcp.PREFLIGHT_LLM_TIMEOUT_MS,
-    SKILL_SERVER_HOST: "0.0.0.0",
-    MCP_STDIO_ENABLED: true,
-    SKILL_DECISION_WATCHER_ENABLED: false,
-  } as EnvConfig;
-}
+const PRIVILEGED_TOOLS = new Set<ToolName>([
+  "covenant_attest_outcome",
+  "covenant_register_identity",
+  "covenant_set_covenant",
+  "covenant_rotate_key",
+]);
 
-type McpContext = ReturnType<typeof buildFullContext>;
+type McpContext = { clients: ReturnType<typeof createPublicChainClients> extends infer P ? P & { walletClient?: unknown; attesterAccount?: unknown } : never; services: PreflightServices };
 
+let cachedPublicCtx: McpContext | null = null;
 let cachedFullCtx: McpContext | null = null;
-let cachedPublicCtx: ReturnType<typeof buildPublicContext> | null = null;
 
-/** Reuse REST server chain clients when skill index enables MCP stdio */
 export function setMcpContext(ctx: McpContext): void {
   cachedFullCtx = ctx;
 }
 
-function buildFullContext(mcp: McpEnv) {
-  const env = mcpEnvToSkillEnv(mcp);
-  const clients = createChainClients(env);
-  const services = {
-    clients,
-    env,
-    goplus: new GoPlusClient(env),
-    explainer: new LlmExplainer(env),
-  };
-  return { clients, services };
-}
-
-function buildPublicContext(mcp: McpEnv) {
+function buildPublicContext(mcp: McpEnv): McpContext {
   const partial = createPublicChainClients(mcp);
-  const stubAccount = { address: partial.contracts.attester } as McpContext["clients"]["attesterAccount"];
-  const clients = {
-    ...partial,
-    walletClient: null as unknown as McpContext["clients"]["walletClient"],
-    attesterAccount: stubAccount,
-  };
   const env = {
     PHAROS_CHAIN_ID: mcp.PHAROS_CHAIN_ID,
     PHAROS_RPC_URL: mcp.PHAROS_RPC_URL,
@@ -93,48 +60,85 @@ function buildPublicContext(mcp: McpEnv) {
     GOPLUS_API_BASE: mcp.GOPLUS_API_BASE,
     PREFLIGHT_LLM_ENABLED: mcp.PREFLIGHT_LLM_ENABLED,
     PREFLIGHT_LLM_TIMEOUT_MS: mcp.PREFLIGHT_LLM_TIMEOUT_MS,
+    COVENANT_API_URL: mcp.COVENANT_API_URL,
   } as EnvConfig;
+
+  const goplus =
+    mcp.GOPLUS_APP_KEY && mcp.GOPLUS_APP_SECRET
+      ? new GoPlusClient({
+          ...env,
+          GOPLUS_APP_KEY: mcp.GOPLUS_APP_KEY,
+          GOPLUS_APP_SECRET: mcp.GOPLUS_APP_SECRET,
+        } as EnvConfig)
+      : null;
+
+  const stubAccount = { address: partial.contracts.attester };
+  const clients = {
+    ...partial,
+    walletClient: null,
+    attesterAccount: stubAccount,
+  } as McpContext["clients"];
+
   return {
-    clients: clients as McpContext["clients"],
+    clients,
     services: {
-      clients: clients as McpContext["clients"],
+      clients: clients as PreflightServices["clients"],
       env,
-      goplus: mcp.GOPLUS_APP_KEY && mcp.GOPLUS_APP_SECRET ? new GoPlusClient(env) : null,
+      goplus,
+      explainer: new LlmExplainer(env),
+    },
+  };
+}
+
+function buildPrivilegedContext(mcp: McpEnv): McpContext {
+  const pk = resolveOwnerPrivateKey(mcp);
+  if (!pk) {
+    throw new Error(
+      "Privileged tool requires DEPLOYER_PRIVATE_KEY or use COVENANT_API_URL=https://covenant-skill.onrender.com for hosted attestation.",
+    );
+  }
+  const env = {
+    PHAROS_CHAIN_ID: mcp.PHAROS_CHAIN_ID,
+    PHAROS_RPC_URL: mcp.PHAROS_RPC_URL,
+    PHAROS_RPC_URL_FALLBACK: mcp.PHAROS_RPC_URL_FALLBACK,
+    DEPLOYER_PRIVATE_KEY: pk,
+    GOPLUS_APP_KEY: mcp.GOPLUS_APP_KEY ?? "",
+    GOPLUS_APP_SECRET: mcp.GOPLUS_APP_SECRET ?? "",
+    GOPLUS_API_BASE: mcp.GOPLUS_API_BASE,
+    PREFLIGHT_LLM_ENABLED: mcp.PREFLIGHT_LLM_ENABLED,
+    PREFLIGHT_LLM_TIMEOUT_MS: mcp.PREFLIGHT_LLM_TIMEOUT_MS,
+  } as EnvConfig;
+  const clients = createChainClients(env);
+  return {
+    clients,
+    services: {
+      clients,
+      env,
+      goplus: mcp.GOPLUS_APP_KEY ? new GoPlusClient(env) : null,
       explainer: new LlmExplainer(env),
     },
   };
 }
 
 function getContextForTool(name: ToolName): McpContext {
-  if (cachedFullCtx) {
+  if (cachedFullCtx && PRIVILEGED_TOOLS.has(name)) {
     return cachedFullCtx;
   }
-
-  const mcp = loadMcpConfig();
-
-  if (READ_ONLY_TOOLS.has(name)) {
+  if (PUBLIC_TOOLS.has(name)) {
     if (!cachedPublicCtx) {
-      cachedPublicCtx = buildPublicContext(mcp);
+      cachedPublicCtx = buildPublicContext(loadMcpConfig());
     }
-    return cachedPublicCtx as McpContext;
+    return cachedPublicCtx;
   }
-
-  if (GOPLUS_TOOLS.has(name) && mcp.GOPLUS_APP_KEY && mcp.GOPLUS_APP_SECRET) {
-    if (!cachedFullCtx) {
-      cachedFullCtx = buildFullContext(mcp);
-    }
-    return cachedFullCtx;
-  }
-
   if (!cachedFullCtx) {
-    cachedFullCtx = buildFullContext(mcp);
+    cachedFullCtx = buildPrivilegedContext(loadMcpConfig());
   }
   return cachedFullCtx;
 }
 
 export function createMcpServer(log: Logger): Server {
   const server = new Server(
-    { name: "covenant", version: "0.1.0" },
+    { name: "covenant", version: "0.2.1" },
     {
       capabilities: { tools: {} },
       instructions: MCP_SERVER_INSTRUCTIONS,
@@ -161,7 +165,11 @@ export function createMcpServer(log: Logger): Server {
     }
 
     try {
-      const result = await dispatchTool(name, request.params.arguments ?? {}, getContextForTool(name));
+      const result = await dispatchTool(
+        name,
+        request.params.arguments ?? {},
+        getContextForTool(name) as { clients: import("../chain/clients.js").ChainClients; services: PreflightServices },
+      );
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
@@ -179,8 +187,13 @@ export function createMcpServer(log: Logger): Server {
 }
 
 export async function runMcpStdio(log: Logger): Promise<void> {
+  try {
+    cachedPublicCtx = buildPublicContext(loadMcpConfig());
+  } catch (err) {
+    log.warn({ err }, "MCP public context warm-up deferred to first tool call");
+  }
   const server = createMcpServer(log);
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  log.info("COVENANT MCP stdio connected");
+  log.info("COVENANT MCP stdio connected (v0.2 — secret-free preflight)");
 }

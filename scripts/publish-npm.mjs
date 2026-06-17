@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const license = resolve(root, "LICENSE");
-const VERSION = "0.1.1";
+const VERSION = "0.2.1";
 
 if (!process.env.NPM_TOKEN) {
   console.error("Set NPM_TOKEN environment variable before publishing.");

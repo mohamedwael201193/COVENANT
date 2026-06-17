@@ -1,82 +1,185 @@
 # covenant-mcp
 
-**Stripe for Agent Trust** — MCP server for credible-commitment preflight on [Pharos Atlantic](https://pharosnetwork.xyz) (chainId `688689`).
+**Stripe + OAuth for AI Agents** on [Pharos Atlantic](https://pharosnetwork.xyz) (chainId `688689`).
 
-Any AI agent installs COVENANT in under 5 minutes and gets 10 tools for identity, policy, preflight, reputation, and receipts.
-
-## 5-minute install
+Zero-setup preflight. Wallet sessions. Human approvals. No private keys in agents.
 
 ```bash
-# 1. One-command setup (writes .env.covenant + Cursor example)
-npx covenant-mcp init
-
-# 2. Fill secrets in .env.covenant (RPC, GoPlus, attester key)
-
-# 3. Add to your MCP client — Cursor example:
-#    Copy packages/mcp/config/cursor.mcp.json → .cursor/mcp.json
-
-# 4. Verify
-npx covenant-mcp   # should stay running on stdio (Ctrl+C to exit)
+npx -y covenant-mcp
 ```
 
-### Required environment
+---
 
-| Variable | Purpose |
+## 1. What is COVENANT?
+
+COVENANT is the **trust rail** autonomous agents call before moving funds or executing on-chain. It combines:
+
+- **Deterministic policy** (rules + simulation)
+- **Trust Capital** reputation on Pharos
+- **Signed attestations** for GuardedExecutor
+- **SIWE sessions** + **approval URLs** (user signs in their wallet)
+
+COVENANT is **not** a custodian. It never holds user private keys.
+
+---
+
+## 2. Why agents need COVENANT
+
+| Without COVENANT | With COVENANT |
 |---|---|
-| `PHAROS_RPC_URL` | Pharos Atlantic JSON-RPC |
-| `GOPLUS_APP_KEY` / `GOPLUS_APP_SECRET` | Counterparty risk reads |
-| `DEPLOYER_PRIVATE_KEY` | Attester/oracle signer (GuardedExecutor attester) |
+| Agent holds hot wallet key | User wallet + session |
+| LLM decides transfers | Deterministic ALLOW/DENY |
+| No audit trail | DecisionLog receipts |
+| No reputation | Trust Capital tiers |
 
-Optional: `PREFLIGHT_LLM_ENABLED=false` (recommended for latency), `COVENANT_OWNER_PRIVATE_KEY` for owner-only writes.
+---
 
-## MCP client configs
-
-| Client | Example file |
-|---|---|
-| Cursor | [config/cursor.mcp.json](./config/cursor.mcp.json) |
-| Claude Desktop | [config/claude-desktop.mcp.json](./config/claude-desktop.mcp.json) |
-| Claude Code | [config/claude-code.mcp.json](./config/claude-code.mcp.json) |
-| OpenAI Agents SDK | [config/openai-agents.example.ts](./config/openai-agents.example.ts) |
-| Generic stdio | [config/generic.mcp.json](./config/generic.mcp.json) |
-
-## Tools (10)
-
-| Tool | Read-only | Purpose |
-|---|---|---|
-| `covenant_health` | ✓ | RPC + attester connectivity |
-| `covenant_reputation` | ✓ | Trust Capital score/tier |
-| `covenant_preflight` | | Deterministic ALLOW/WARN/DENY + attestation |
-| `covenant_simulate` | ✓ | eth_call / estimateGas debug |
-| `covenant_verify_counterparty` | ✓ | GoPlus risk signal |
-| `covenant_get_receipt` | ✓ | DecisionLog audit receipt |
-| `covenant_register_identity` | | Onboard agent key |
-| `covenant_set_covenant` | | Publish policy hash |
-| `covenant_rotate_key` | | Rotate compromised agent key |
-| `covenant_attest_outcome` | | Oracle reputation update |
-
-Legacy aliases (`preflight`, `reputation`, …) still resolve for backward compatibility.
-
-## Agent workflow: send money
-
-```
-User: "Pay 0.01 PHRS to 0xRecipient"
-  → covenant_reputation { agent }
-  → covenant_preflight { intent, covenant, covenantHash }
-  → (client submits GuardedExecutor.execute with attestation)
-  → covenant_get_receipt { decisionId }
-```
-
-See [docs/skill/EXAMPLES.md](../../docs/skill/EXAMPLES.md) for full flows and integration snippets.
-
-## Monorepo dev
+## 3. Quick Start (60 seconds)
 
 ```bash
-pnpm install
-pnpm --filter covenant-skill build
-pnpm --filter covenant-mcp build
-node packages/mcp/dist/cli.js
+npx -y covenant-mcp init
 ```
 
-## License
+**Minimal MCP config** (no secrets required for read tools + preflight):
 
-MIT
+```json
+{
+  "mcpServers": {
+    "covenant": {
+      "command": "npx",
+      "args": ["-y", "covenant-mcp"],
+      "env": {
+        "PREFLIGHT_LLM_ENABLED": "false"
+      }
+    }
+  }
+}
+```
+
+Verify: ask your agent to call `covenant_health`.
+
+---
+
+## 4. Agent install matrix
+
+| Client | Config |
+|---|---|
+| **Cursor** | [config/cursor.mcp.json](./config/cursor.mcp.json) |
+| **Claude Desktop** | [config/claude-desktop.mcp.json](./config/claude-desktop.mcp.json) |
+| **Claude Code** | [config/claude-code.mcp.json](./config/claude-code.mcp.json) |
+| **OpenAI Agents** | [config/openai-agents.example.ts](./config/openai-agents.example.ts) |
+| **Antigravity** | Same as Cursor — use `covenant-mcp` not `@covenant/mcp` |
+
+---
+
+## 5. Zero-setup tools (no keys, no API secrets)
+
+| Tool | Purpose |
+|---|---|
+| `covenant_health` | RPC + chain probe |
+| `covenant_reputation` | Trust Capital tier |
+| `covenant_simulate` | eth_call / gas |
+| `covenant_preflight` | ALLOW/WARN/DENY evaluation |
+
+Optional hosted attestation (no local attester key):
+
+| Tool | Purpose |
+|---|---|
+| `covenant_sign_attestation` | Uses `https://covenant-skill.onrender.com` by default |
+
+---
+
+## 6. Wallet flow (no private keys)
+
+```
+covenant_connect_wallet
+  → user signs SIWE message
+covenant_create_session
+  → sessionId (7–90 days)
+covenant_preflight
+  → ALLOW
+covenant_sign_attestation
+  → signed attestation (hosted)
+covenant_request_approval
+  → approvalUrl
+User opens URL → wallet popup → signs
+covenant_execute_authorized
+covenant_get_receipt
+```
+
+Prompt library: [docs/prompts/](../../docs/prompts/)
+
+---
+
+## 7. Tool reference (17 tools)
+
+**Public:** health, reputation, simulate, preflight, verify_counterparty, sign_attestation, connect_wallet, create_session, request_approval, get_pending_approvals, execute_authorized, revoke_session, get_receipt
+
+**Privileged (oracle/owner only):** register_identity, set_covenant, rotate_key, attest_outcome
+
+Full schemas: [docs/MCP_REFERENCE.md](../../docs/MCP_REFERENCE.md)
+
+---
+
+## 8. Hosted API (no local install)
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/preflight/evaluate` | Secret-free evaluation |
+| `POST /api/attest` | Hosted attestation signing |
+| `GET /api/reputation/:agent` | Trust Capital |
+
+Base: `https://covenant-skill.onrender.com`
+
+Set `COVENANT_API_URL` to override.
+
+---
+
+## 9. Security model
+
+- LLM **cannot** ALLOW — only deterministic engine
+- User **never** shares seed phrase with agent
+- Sessions are revocable + expiring
+- Approvals require browser wallet signature
+- Attester key stays on hosted skill or operator env — not in agent chat
+
+---
+
+## 10. FAQ
+
+**Q: `npx @covenant/mcp` 404?**  
+A: Use `npx covenant-mcp` (published unscoped). `@covenant` npm org requires separate access.
+
+**Q: preflight needs GoPlus?**  
+A: v0.2+ skips GoPlus when no keys; returns WARN with `GOPLUS_SKIPPED`.
+
+**Q: How to sign ALLOW without DEPLOYER_PRIVATE_KEY?**  
+A: `covenant_sign_attestation` uses hosted Render API by default.
+
+---
+
+## 11. Live contracts (Pharos Atlantic)
+
+| Contract | Address |
+|---|---|
+| GuardedExecutor | `0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F` |
+| ReputationRegistry | `0x92b8815A17D85E45DB5Da9952764Ee2ce072A973` |
+| DecisionLog | `0x8A80D270dd7028536ecB6f92b04eec11F929d603` |
+
+Dashboard demo: https://covenant-web-mu.vercel.app
+
+---
+
+## 12. Troubleshooting
+
+| Issue | Fix |
+|---|---|
+| Slow preflight | `PREFLIGHT_LLM_ENABLED=false` |
+| Tool list empty | Restart MCP client |
+| Attestation fails | Check hosted API or set attester env on operator side |
+
+Benchmark: `node scripts/benchmark-mcp.mjs` (from repo root, skill package for SDK)
+
+---
+
+MIT · [GitHub](https://github.com/mohamedwael201193/COVENANT)

@@ -14,26 +14,33 @@ export function loadMcpEnv(): void {
   }
 }
 
-const optionalKey = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{64}$/)
-  .optional()
-  .transform((v) => v as `0x${string}` | undefined);
+const emptyToUndefined = (v: unknown) =>
+  v === "" || v === undefined || v === null || v === "0x" ? undefined : v;
+
+const optionalKey = z.preprocess(
+  emptyToUndefined,
+  z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{64}$/)
+    .optional(),
+).transform((v) => v as `0x${string}` | undefined);
 
 export const mcpEnvSchema = z.object({
   PHAROS_CHAIN_ID: z.coerce.number().default(PHAROS_ATLANTIC_CHAIN_ID),
   PHAROS_RPC_URL: z.string().url().default(DEFAULT_RPC_URL),
-  PHAROS_RPC_URL_FALLBACK: z.string().url().optional(),
+  PHAROS_RPC_URL_FALLBACK: z.preprocess(emptyToUndefined, z.string().url().optional()),
   DEPLOYER_PRIVATE_KEY: optionalKey,
   COVENANT_OWNER_PRIVATE_KEY: optionalKey,
-  GOPLUS_APP_KEY: z.string().min(1).optional(),
-  GOPLUS_APP_SECRET: z.string().min(1).optional(),
+  GOPLUS_APP_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  GOPLUS_APP_SECRET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   GOPLUS_API_BASE: z.string().url().default("https://api.gopluslabs.io"),
   PREFLIGHT_LLM_ENABLED: z
     .string()
     .optional()
-    .transform((v) => v !== "false" && v !== "0"),
+    .transform((v) => v === "true" || v === "1"),
   PREFLIGHT_LLM_TIMEOUT_MS: z.coerce.number().default(2500),
+  COVENANT_API_URL: z.string().url().optional(),
+  COVENANT_DASHBOARD_URL: z.string().url().optional(),
 });
 
 export type McpEnv = z.infer<typeof mcpEnvSchema>;

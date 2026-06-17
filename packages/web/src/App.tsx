@@ -6,6 +6,8 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { DecisionsPage } from "@/pages/DecisionsPage";
 import { ProofPage } from "@/pages/ProofPage";
 import { ReputationPage } from "@/pages/ReputationPage";
+import { ApprovePage } from "@/pages/ApprovePage";
+import { ConnectPage } from "@/pages/ConnectPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +23,8 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          <Route path="approve/:approvalId" element={<ApprovePage />} />
+          <Route path="connect" element={<ConnectPage />} />
           <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />
             <Route path="covenants" element={<CovenantsPage />} />

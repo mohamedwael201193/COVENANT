@@ -1,40 +1,59 @@
-# COVENANT Skill Scorecard
+# COVENANT Skill Scorecard (v0.2.0)
 
-Post-productization self-assessment (v0.1.0).
+Production hardening assessment after Antigravity validation.
 
-## Scores (1–10)
+## Competitive scores (1–10)
 
-| Dimension | Score | Notes |
-|---|---|---|
-| **Skill Quality** | 8/10 | Rich tool descriptions, workflow instructions, 10 discoverable tools. Missing MCP resources/prompts. |
-| **Agent Usability** | 8/10 | `npx covenant-mcp init`, client configs, AGENTS.md, payment flow docs. Hosted MCP would reach 9+. |
-| **MCP Compliance** | 9/10 | stdio transport, JSON Schema inputs, readOnly/destructive hints, aliases, ListTools complete. |
-| **Reusability** | 8/10 | Published package shape, Pharos-agnostic patterns, REST fallback. Tied to Pharos contracts today. |
-| **Composability** | 9/10 | Clear pipeline: reputation → preflight → execute → receipt. Works with Claude, Cursor, OpenAI Agents. |
-| **Pharos Alignment** | 10/10 | Atlantic testnet, GuardedExecutor, Trust Capital, GoPlus, deployed contracts. |
+| Dimension | v0.1 | v0.2 | Target | Notes |
+|---|---|---|---|---|
+| **Installation** | 8 | 9 | 9 | `npx covenant-mcp init`, zero-secret Cursor config |
+| **Discoverability** | 8 | 8 | 9 | 17 tools, rich descriptions; Smithery pending |
+| **Performance** | 7 | 8 | 9 | Fast health path; see `BENCHMARK_REPORT.json` |
+| **Security** | 7 | 9 | 9 | SIWE verify, session scopes, no keys in agent |
+| **Wallet UX** | 4 | 8 | 9 | connect → session → approval URL flow |
+| **Agent UX** | 8 | 9 | 9 | Secret-free preflight/simulate/reputation |
+| **Documentation** | 7 | 9 | 9 | World-class README + prompt library |
+| **Pharos alignment** | 10 | 10 | 10 | Atlantic, GuardedExecutor, Trust Capital |
+| **Reusability** | 8 | 9 | 9 | Hosted attestation API fallback |
+| **Composability** | 9 | 9 | 10 | Full pipeline without local keys |
 
-**Overall: 8.7 / 10** — "Stripe for Agent Trust" positioning achieved for MCP; dashboard demoted to demo.
+**Overall: 8.4 → 8.8 / 10** (target 9.2 after Smithery + hosted MCP SSE)
 
-## Checklist (requirements)
+## vs reference MCP servers
 
-| # | Requirement | Status |
-|---|---|---|
-| 1 | Official MCP server package | ✅ `covenant-mcp` |
-| 2 | NPM package | ✅ publish-ready |
-| 3 | One-command install | ✅ `npx covenant-mcp init` |
-| 4 | MCP config examples | ✅ 5 clients in `packages/mcp/config/` |
-| 5 | Improved tool descriptions | ✅ purpose / when / when-not in schemas |
-| 6 | Agent-ready examples | ✅ `docs/skill/EXAMPLES.md` |
-| 7 | Integration examples | ✅ `docs/skill/INTEGRATIONS.md` |
-| 8 | Remove dashboard-centric framing | ✅ README + AGENTS.md skill-first |
-| 9 | Tools discoverable | ✅ `covenant_*` + tests |
-| 10 | 5-minute install guide | ✅ `docs/skill/INSTALL.md` |
-| 11 | Comparison vs top MCP | ✅ `docs/skill/COMPARISON.md` |
-| 12 | Final score | ✅ this document |
+| Server | Install | Auth | Wallet | Covenant v0.2 |
+|---|---|---|---|---|
+| GitHub MCP | OAuth device | ✅ | N/A | Comparable install; Covenant adds on-chain auth |
+| Stripe MCP | API key | ✅ | N/A | Covenant secret-free read tools win for agents |
+| Supabase MCP | Project URL + key | ⚠️ | N/A | Covenant zero-setup for evaluate tools |
 
-## Next releases (v0.2)
+## Antigravity friction — status
 
-- MCP SSE on Render
-- MCP resources for receipts and covenants
-- Smithery listing
-- Env-only signing (no `ownerPrivateKey` in tool args)
+| Issue | v0.2 fix |
+|---|---|
+| preflight requires GoPlus | Skipped when unset (`GOPLUS_SKIPPED`) |
+| preflight requires DEPLOYER key | Evaluate-only; `covenant_sign_attestation` uses hosted API |
+| RPC confusion | Default `atlantic-rpc.pharosnetwork.xyz` (no API key) |
+| onboarding friction | `packages/mcp/config/cursor.mcp.json` — no env vars |
+| wallet / approval missing | 6 session tools + dashboard `/approve/:id` |
+| latency | Fast health; lazy public client init |
+
+## Remaining gaps (v0.3)
+
+- Hosted MCP SSE at `https://api.covenant.xyz/mcp`
+- Persistent session store (Postgres/Redis)
+- Smithery marketplace listing
+- Full GuardedExecutor tx on ApprovePage
+- `@covenant` npm org scope (403 on publish)
+
+## Benchmark targets
+
+See [BENCHMARK_REPORT.json](./BENCHMARK_REPORT.json) for latest run.
+
+| Tool | Target |
+|---|---|
+| startup | < 3000 ms |
+| covenant_health | < 1000 ms |
+| covenant_reputation | < 2000 ms |
+| covenant_simulate | < 3000 ms |
+| covenant_preflight | < 5000 ms |

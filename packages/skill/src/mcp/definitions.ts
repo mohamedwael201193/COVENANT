@@ -28,17 +28,21 @@ const INTENT = {
   required: ["agent", "target", "data", "value", "nonce"],
 };
 
-export const MCP_SERVER_INSTRUCTIONS = `COVENANT is the trust rail for autonomous agents on Pharos Atlantic (chainId 688689).
-Use BEFORE moving funds or calling contracts on behalf of an agent.
+export const MCP_SERVER_INSTRUCTIONS = `COVENANT — Stripe + OAuth for AI Agents on Pharos Atlantic (chainId 688689).
 
-Standard payment flow:
-1. covenant_reputation — check Trust Capital tier
-2. covenant_preflight — deterministic rules + simulation + risk → ALLOW/WARN/DENY + signed attestation
-3. (client submits GuardedExecutor.execute with attestation)
-4. covenant_get_receipt — audit DecisionLog entry
+ZERO-SETUP tools (no private keys, no API secrets):
+covenant_health, covenant_reputation, covenant_simulate, covenant_preflight
 
-Do NOT use LLM judgment to authorize transfers — only covenant_preflight verdict ALLOW permits execution.
-Read-only tools work without private keys. Write tools require COVENANT_OWNER_PRIVATE_KEY or DEPLOYER_PRIVATE_KEY.`;
+Wallet flow (no keys in agent):
+1. covenant_connect_wallet → SIWE message + connectUrl
+2. covenant_create_session → sessionId with permissions
+3. covenant_preflight → ALLOW/WARN/DENY (evaluation only)
+4. covenant_sign_attestation → signed ALLOW (hosted COVENANT_API_URL or local attester env)
+5. covenant_request_approval → approvalUrl for user wallet signature
+6. covenant_execute_authorized → after user approves in browser
+7. covenant_get_receipt → on-chain audit
+
+Optional env: COVENANT_API_URL=https://covenant-skill.onrender.com for hosted attestation.`;
 
 export const toolDefinitions = [
   {
@@ -63,7 +67,7 @@ export const toolDefinitions = [
   {
     name: "covenant_preflight",
     description:
-      "Run deterministic preflight (covenant rules + eth_call simulation + optional GoPlus) and sign ALLOW attestation if permitted. Use BEFORE any guarded execution or payment. Do NOT use after execution (use covenant_get_receipt) or for read-only chain queries (use covenant_simulate). Returns verdict ALLOW|WARN|DENY, violations, intentHash, and attestation when ALLOW.",
+      "Evaluate intent against covenant rules + simulation (+ optional GoPlus if configured). NO secrets required. Returns ALLOW|WARN|DENY without signing. Use BEFORE payment. After ALLOW, call covenant_sign_attestation then covenant_request_approval. Do NOT use for gas-only debug (covenant_simulate).",
     inputSchema: {
       type: "object",
       properties: {
@@ -141,6 +145,96 @@ export const toolDefinitions = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: "covenant_sign_attestation",
+    description:
+      "Sign ALLOW attestation after covenant_preflight returns ALLOW/WARN. Uses COVENANT_API_URL (hosted, recommended) OR local DEPLOYER_PRIVATE_KEY. Agent never needs user private keys. Do NOT use before preflight evaluation.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        intent: INTENT,
+        covenantHash: { type: "string", pattern: "^0x[a-fA-F0-9]{64}$" },
+        covenant: { type: "object" },
+        deadlineSeconds: { type: "integer", default: 3600 },
+      },
+      required: ["intent", "covenant", "covenantHash"],
+    },
+  },
+  {
+    name: "covenant_connect_wallet",
+    description:
+      "Start wallet onboarding via Sign-In With Ethereum (SIWE). Returns message for user to sign and connectUrl. Use FIRST when agent needs user wallet authorization. No private keys.",
+    inputSchema: {
+      type: "object",
+      properties: { walletAddress: ADDRESS },
+      required: ["walletAddress"],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: "covenant_create_session",
+    description:
+      "Create authorized agent session after user signs SIWE message from covenant_connect_wallet. Grants permissions (reputation, simulate, preflight, execute) for 7-90 days. No private keys stored.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        walletAddress: ADDRESS,
+        agentAddress: ADDRESS,
+        signature: { type: "string" },
+        message: { type: "string" },
+        nonce: { type: "string" },
+        permissions: { type: "array", items: { type: "string" } },
+        maxSpendWei: { type: "string" },
+        durationDays: { type: "integer", default: 7 },
+      },
+      required: ["walletAddress", "signature", "message", "nonce"],
+    },
+  },
+  {
+    name: "covenant_request_approval",
+    description:
+      "After ALLOW preflight, create human-in-the-loop approval. Returns approvalUrl — user opens in browser and signs with their wallet. Required before moving funds. No agent private keys.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        sessionId: { type: "string" },
+        intentHash: { type: "string", pattern: "^0x[a-fA-F0-9]{64}$" },
+        verdict: { type: "string", enum: ["ALLOW", "WARN", "DENY"] },
+        preflightSummary: { type: "object" },
+      },
+      required: ["sessionId", "intentHash", "verdict"],
+    },
+  },
+  {
+    name: "covenant_get_pending_approvals",
+    description: "List pending approval requests for a session. Use to poll until user completes wallet signature.",
+    inputSchema: {
+      type: "object",
+      properties: { sessionId: { type: "string" } },
+      required: ["sessionId"],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: "covenant_execute_authorized",
+    description:
+      "Check approval status after user signed at approvalUrl. Returns ready-to-execute when approved. Agent still submits tx via user wallet — Covenant never custodies keys.",
+    inputSchema: {
+      type: "object",
+      properties: { approvalId: { type: "string" } },
+      required: ["approvalId"],
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: "covenant_revoke_session",
+    description: "Revoke an agent session immediately. Use when user disconnects wallet or security concern.",
+    inputSchema: {
+      type: "object",
+      properties: { sessionId: { type: "string" } },
+      required: ["sessionId"],
+    },
+  },
+  {
     name: "covenant_register_identity",
     description:
       "Register a new agent key on IdentityRegistry (on-chain). Use ONCE when onboarding a new agent. Do NOT use for covenant updates (covenant_set_covenant) or key rotation (covenant_rotate_key). Requires owner private key.",
@@ -214,6 +308,8 @@ export const toolAliases: Record<string, (typeof toolDefinitions)[number]["name"
   getReceipt: "covenant_get_receipt",
   reputation: "covenant_reputation",
   rotateKey: "covenant_rotate_key",
+  signAttestation: "covenant_sign_attestation",
+  oracleAttest: "covenant_attest_outcome",
 };
 
 export type ToolName = (typeof toolDefinitions)[number]["name"];

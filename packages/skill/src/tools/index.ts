@@ -13,9 +13,10 @@ import {
   readDecision,
   readReputation,
 } from "../chain/clients.js";
-import type { PreflightServices } from "../engine/preflight.js";
+import type { PreflightServices } from "../engine/preflightEvaluate.js";
+import { runPreflightEvaluate } from "../engine/preflightEvaluate.js";
 import { runPreflight } from "../engine/preflight.js";
-import { GoPlusClient } from "../engine/riskRead.goplus.js";
+import { hostedSignAttestation } from "../hosted/client.js";
 import { simulateIntent } from "../engine/simulator.js";
 import {
   attestOutcomeSchema,
@@ -29,7 +30,15 @@ import {
   verifyCounterpartySchema,
   verdictLabel,
 } from "../engine/schema.js";
-import { collectHealthState } from "../http/health.js";
+import {
+  handleConnectWallet,
+  handleCreateSession,
+  handleExecuteAuthorized,
+  handleGetPendingApprovals,
+  handleRequestApproval,
+  handleRevokeSession,
+} from "../session/handlers.js";
+import { Verdict } from "covenant-shared";
 
 function ownerWallet(clients: ChainClients, privateKey: `0x${string}`) {
   const account = privateKeyToAccount(privateKey);
@@ -77,7 +86,10 @@ export async function handleSetCovenant(clients: ChainClients, args: unknown) {
 
 export async function handlePreflight(services: PreflightServices, args: unknown) {
   const input = preflightRequestSchema.parse(args);
-  const result = await runPreflight(services, input);
+  const result = await runPreflightEvaluate(services, input, {
+    skipGoPlusIfUnavailable: true,
+    skipLlm: true,
+  });
   return {
     verdict: verdictLabel(result.verdict),
     intentHash: result.intentHash,
@@ -88,9 +100,33 @@ export async function handlePreflight(services: PreflightServices, args: unknown
     },
     risk: result.risk,
     explanation: result.explanation,
-    attestation: result.attestation
-      ? { ...result.attestation, deadline: result.attestation.deadline.toString() }
-      : undefined,
+    attestation: null,
+    nextStep:
+      result.verdict === Verdict.ALLOW || result.verdict === Verdict.WARN
+        ? "Call covenant_sign_attestation (hosted COVENANT_API_URL or local attester key) then covenant_request_approval for user wallet signature."
+        : undefined,
+  };
+}
+
+export async function handleSignAttestation(services: PreflightServices, args: unknown) {
+  const input = preflightRequestSchema.parse(args);
+  const apiUrl =
+    services.env.COVENANT_API_URL ??
+    process.env.COVENANT_API_URL ??
+    "https://covenant-skill.onrender.com";
+  const hasLocalAttester = Boolean(services.env.DEPLOYER_PRIVATE_KEY);
+  if (!hasLocalAttester) {
+    return { ...(await hostedSignAttestation(apiUrl, input) as Record<string, unknown>), source: "hosted" };
+  }
+  const result = await runPreflight(services, input, { skipGoPlusIfUnavailable: true, skipLlm: true });
+  if (!result.attestation) {
+    throw new Error(`Cannot sign attestation for verdict ${verdictLabel(result.verdict)}`);
+  }
+  return {
+    verdict: verdictLabel(result.verdict),
+    intentHash: result.intentHash,
+    attestation: { ...result.attestation, deadline: result.attestation.deadline.toString() },
+    source: "local",
   };
 }
 
@@ -106,11 +142,16 @@ export async function handleSimulate(clients: ChainClients, args: unknown) {
   return { ...result, gasEstimate: result.gasEstimate?.toString() };
 }
 
-export async function handleVerifyCounterparty(env: PreflightServices["env"], args: unknown) {
+export async function handleVerifyCounterparty(services: PreflightServices, args: unknown) {
   const input = verifyCounterpartySchema.parse(args);
-  const goplus = new GoPlusClient(env);
-  const signal = await goplus.assessCounterparty(input.address as `0x${string}`);
-  return signal;
+  if (!services.goplus) {
+    return {
+      status: "skipped",
+      message: "GoPlus unavailable without API keys. Set GOPLUS_APP_KEY or use hosted COVENANT_API_URL.",
+      address: input.address,
+    };
+  }
+  return services.goplus.assessCounterparty(input.address as `0x${string}`);
 }
 
 export async function handleAttestOutcome(clients: ChainClients, args: unknown) {
@@ -167,26 +208,20 @@ export async function handleRotateKey(clients: ChainClients, args: unknown) {
 }
 
 export async function handleHealth(clients: ChainClients) {
-  try {
-    const health = await collectHealthState(clients);
-    return {
-      status: health.attesterMatch ? "ok" : "degraded",
-      attesterMatch: health.attesterMatch,
-      attesterBalanceWei: health.attesterBalance.toString(),
-      chainId: clients.chain.id,
-      blockNumber: health.rpc.blockNumber.toString(),
-    };
-  } catch {
-    const { probeRpcCapabilities } = await import("../engine/simulator.js");
-    const rpc = await probeRpcCapabilities(clients.publicClient);
-    return {
-      status: rpc.ethCall ? "ok" : "degraded",
-      mode: "read-only",
-      chainId: clients.chain.id,
-      blockNumber: rpc.blockNumber.toString(),
-      ethCall: rpc.ethCall,
-    };
-  }
+  const [blockNumber, attesterBalance] = await Promise.all([
+    clients.publicClient.getBlockNumber(),
+    clients.publicClient
+      .getBalance({ address: clients.attesterAccount.address })
+      .catch(() => 0n),
+  ]);
+  return {
+    status: "ok",
+    chainId: clients.chain.id,
+    blockNumber: blockNumber.toString(),
+    attesterBalanceWei: attesterBalance.toString(),
+    attesterAddress: clients.attesterAccount.address,
+    mode: "fast",
+  };
 }
 
 export {
@@ -213,10 +248,24 @@ export async function dispatchTool(
       return handleSetCovenant(ctx.clients, args);
     case "covenant_preflight":
       return handlePreflight(ctx.services, args);
+    case "covenant_sign_attestation":
+      return handleSignAttestation(ctx.services, args);
     case "covenant_simulate":
       return handleSimulate(ctx.clients, args);
     case "covenant_verify_counterparty":
-      return handleVerifyCounterparty(ctx.services.env, args);
+      return handleVerifyCounterparty(ctx.services, args);
+    case "covenant_connect_wallet":
+      return handleConnectWallet(args);
+    case "covenant_create_session":
+      return handleCreateSession(args);
+    case "covenant_request_approval":
+      return handleRequestApproval(args);
+    case "covenant_get_pending_approvals":
+      return handleGetPendingApprovals(args);
+    case "covenant_execute_authorized":
+      return handleExecuteAuthorized(args);
+    case "covenant_revoke_session":
+      return handleRevokeSession(args);
     case "covenant_attest_outcome":
       return handleAttestOutcome(ctx.clients, args);
     case "covenant_get_receipt":

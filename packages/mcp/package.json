@@ -1,6 +1,6 @@
 {
   "name": "covenant-mcp",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "COVENANT MCP server — Stripe for Agent Trust on Pharos Atlantic. Install: npx covenant-mcp",
   "type": "module",
   "license": "MIT",

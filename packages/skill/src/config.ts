@@ -55,6 +55,8 @@ export const envSchema = z.object({
     .transform((v) => v !== "false" && v !== "0"),
   PREFLIGHT_LLM_TIMEOUT_MS: z.coerce.number().default(2500),
   PORT: z.coerce.number().optional(),
+  COVENANT_API_URL: z.string().url().optional(),
+  COVENANT_DASHBOARD_URL: z.string().url().optional(),
   IDENTITY_REGISTRY_ADDRESS: hexAddress.optional(),
   COVENANT_REGISTRY_ADDRESS: hexAddress.optional(),
   DECISION_LOG_ADDRESS: hexAddress.optional(),

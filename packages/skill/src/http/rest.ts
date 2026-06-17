@@ -4,6 +4,7 @@ import type { Logger } from "pino";
 import { verdictLabel } from "../engine/schema.js";
 import type { PreflightServices } from "../engine/preflight.js";
 import { runPreflight } from "../engine/preflight.js";
+import { runPreflightEvaluate } from "../engine/preflightEvaluate.js";
 import {
   preflightRequestSchema,
   simulateRequestSchema,
@@ -23,6 +24,12 @@ import { handleSetCovenant } from "../tools/index.js";
 import { setCovenantSchema } from "../engine/schema.js";
 import { registerHealthRoutes, collectHealthState } from "./health.js";
 import { registerSseRoutes } from "./sse.js";
+import {
+  handleConnectWallet,
+  handleCreateSession,
+  getApproval,
+  updateApprovalStatus,
+} from "../session/handlers.js";
 
 export interface RestContext {
   clients: ChainClients;
@@ -96,6 +103,91 @@ export function createRestApp(ctx: RestContext): Express {
       ctx.log.error({ err: error }, "list reputation failed");
       res.status(500).json({ error: error instanceof Error ? error.message : "list reputation failed" });
     }
+  });
+
+  app.post("/api/preflight/evaluate", async (req, res) => {
+    const parsed = preflightRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await runPreflightEvaluate(ctx.services, parsed.data, {
+        skipGoPlusIfUnavailable: true,
+        skipLlm: true,
+      });
+      res.json({
+        ...result,
+        verdict: verdictLabel(result.verdict),
+        simulation: {
+          ...result.simulation,
+          gasEstimate: result.simulation.gasEstimate?.toString(),
+        },
+      });
+    } catch (error) {
+      ctx.log.error({ err: error }, "preflight evaluate failed");
+      res.status(500).json({ error: error instanceof Error ? error.message : "evaluate failed" });
+    }
+  });
+
+  app.post("/api/attest", async (req, res) => {
+    const parsed = preflightRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten() });
+      return;
+    }
+    try {
+      const result = await runPreflight(ctx.services, parsed.data, {
+        skipGoPlusIfUnavailable: false,
+        skipLlm: true,
+      });
+      if (!result.attestation) {
+        res.status(422).json({ verdict: verdictLabel(result.verdict), error: "No attestation for verdict" });
+        return;
+      }
+      res.json({
+        verdict: verdictLabel(result.verdict),
+        intentHash: result.intentHash,
+        attestation: { ...result.attestation, deadline: result.attestation.deadline.toString() },
+      });
+    } catch (error) {
+      ctx.log.error({ err: error }, "attest failed");
+      res.status(500).json({ error: error instanceof Error ? error.message : "attest failed" });
+    }
+  });
+
+  app.post("/api/sessions/connect", async (req, res) => {
+    try {
+      res.json(await handleConnectWallet(req.body));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "connect failed" });
+    }
+  });
+
+  app.post("/api/sessions", async (req, res) => {
+    try {
+      res.status(201).json(await handleCreateSession(req.body));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "session failed" });
+    }
+  });
+
+  app.get("/api/approvals/:id", async (req, res) => {
+    const approval = getApproval(req.params.id);
+    if (!approval) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    res.json(approval);
+  });
+
+  app.post("/api/approvals/:id/approve", async (req, res) => {
+    const approval = updateApprovalStatus(req.params.id, "approved");
+    if (!approval) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    res.json(approval);
   });
 
   app.post("/api/preflight", async (req, res) => {
