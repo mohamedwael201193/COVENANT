@@ -1,20 +1,19 @@
 # Install COVENANT
 
-Copy-paste into Cursor, Claude Code, Antigravity, or any MCP client.
+Copy-paste into **Cursor**, **Claude Desktop**, **Claude Code**, **OpenAI Agents**, **Antigravity**, or any MCP-compatible Pharos Agent.
 
 ```text
-Install and configure COVENANT MCP for this project.
+Install the COVENANT Pharos Skill for this project.
 
-Package: covenant-mcp (npm)
-Docs: https://github.com/mohamedwael201193/COVENANT
+COVENANT is the trust and authorization layer for AI agents on Pharos Atlantic.
+Package: covenant-mcp (npm) — https://github.com/mohamedwael201193/COVENANT
 
 Steps:
 1. Run: npx -y covenant-mcp init
-2. Confirm .cursor/mcp.json was created (or covenant is listed in existing MCP config).
-3. Show me the MCP server entry — command or hosted URL.
-4. Tell me to restart the MCP client.
-5. After restart, list all covenant_* tools (expect 17).
+2. Confirm .cursor/mcp.json exists (or covenant MCP is already configured).
+3. Tell me to restart the MCP client.
+4. After restart, list all covenant_* tools — expect 17.
+5. Run covenant_health and report status + chainId.
 
-Do not ask for private keys. Do not clone the repo unless I am developing COVENANT itself.
-Execute immediately.
+Do not ask for private keys. Execute immediately.
 ```

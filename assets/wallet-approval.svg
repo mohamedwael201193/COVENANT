@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420">
+  <rect width="800" height="420" fill="#0f172a"/>
+  <rect x="40" y="40" width="720" height="340" rx="12" fill="#1e293b" stroke="#334155"/>
+  <text x="400" y="100" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="22" text-anchor="middle">Screenshot placeholder</text>
+  <text x="400" y="150" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="28" font-weight="600" text-anchor="middle">Wallet Approval Flow</text>
+  <text x="400" y="200" fill="#60a5fa" font-family="ui-monospace,monospace" font-size="16" text-anchor="middle">connectUrl ’ SIWE ’ approvalUrl ’ MetaMask 688689</text>
+  <text x="400" y="320" fill="#64748b" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">Replace with assets/wallet-approval.png after capture</text>
+</svg>
