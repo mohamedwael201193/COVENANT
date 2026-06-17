@@ -1,14 +1,17 @@
+import { existsSync } from "node:fs";
 import { config as loadDotenv } from "dotenv";
 import { resolve } from "node:path";
 import { z } from "zod";
-import { loadChainConfig, PHAROS_ATLANTIC_CHAIN_ID } from "@covenant/shared";
+import { DEFAULT_RPC_URL, loadChainConfig, PHAROS_ATLANTIC_CHAIN_ID } from "covenant-shared";
 
-const MONOREPO_ROOT = resolve(import.meta.dirname, "../../../..");
-
-/** Load .env from cwd, then monorepo root (dev), then skip. */
+/** Load .env from cwd; optionally monorepo root when developing from source. */
 export function loadMcpEnv(): void {
   loadDotenv({ path: resolve(process.cwd(), ".env") });
-  loadDotenv({ path: resolve(MONOREPO_ROOT, ".env") });
+  loadDotenv({ path: resolve(process.cwd(), ".env.covenant") });
+  const monorepoEnv = resolve(import.meta.dirname, "../../../..", ".env");
+  if (existsSync(monorepoEnv)) {
+    loadDotenv({ path: monorepoEnv });
+  }
 }
 
 const optionalKey = z
@@ -19,7 +22,7 @@ const optionalKey = z
 
 export const mcpEnvSchema = z.object({
   PHAROS_CHAIN_ID: z.coerce.number().default(PHAROS_ATLANTIC_CHAIN_ID),
-  PHAROS_RPC_URL: z.string().url(),
+  PHAROS_RPC_URL: z.string().url().default(DEFAULT_RPC_URL),
   PHAROS_RPC_URL_FALLBACK: z.string().url().optional(),
   DEPLOYER_PRIVATE_KEY: optionalKey,
   COVENANT_OWNER_PRIVATE_KEY: optionalKey,

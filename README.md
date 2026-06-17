@@ -5,12 +5,12 @@
 Install in under 5 minutes. Any agent gets deterministic preflight, signed attestations, on-chain receipts, and Trust Capital reputation.
 
 ```bash
-npx @covenant/mcp init
+npx covenant-mcp init
 ```
 
 | Product | Role |
 |---|---|
-| **`@covenant/mcp`** | Primary — MCP server for agents |
+| **`covenant-mcp`** | Primary — MCP server for agents |
 | **REST skill API** | Production host / scripts |
 | **Web dashboard** | Demo UI only — [covenant-web](https://covenant-web-mu.vercel.app) |
 
@@ -22,7 +22,7 @@ npx @covenant/mcp init
 | [5-minute install](docs/skill/INSTALL.md) | Fast setup |
 | [Examples](docs/skill/EXAMPLES.md) | Send-money flow, onboarding |
 | [Integrations](docs/skill/INTEGRATIONS.md) | Claude, Cursor, OpenAI Agents |
-| [MCP package](packages/mcp/README.md) | `@covenant/mcp` reference |
+| [MCP package](packages/mcp/README.md) | `covenant-mcp` reference |
 | [Comparison](docs/skill/COMPARISON.md) | vs GitHub, Stripe, Supabase MCP |
 | [Scorecard](docs/skill/SCORECARD.md) | Skill quality metrics |
 
@@ -39,7 +39,7 @@ Legacy names (`preflight`, `reputation`, …) still work.
   "mcpServers": {
     "covenant": {
       "command": "npx",
-      "args": ["-y", "@covenant/mcp"],
+      "args": ["-y", "covenant-mcp"],
       "env": {
         "PHAROS_RPC_URL": "https://atlantic-rpc.pharosnetwork.xyz",
         "GOPLUS_APP_KEY": "...",
@@ -66,7 +66,7 @@ Legacy names (`preflight`, `reputation`, …) still work.
 
 ```bash
 pnpm install && pnpm generate:abis && pnpm test && pnpm build
-pnpm --filter @covenant/mcp build
+pnpm --filter covenant-mcp build
 node packages/mcp/dist/cli.js   # MCP stdio
 pnpm dev:skill                  # MCP + REST :8787
 pnpm dev:web                    # Demo dashboard :5173
@@ -78,7 +78,7 @@ Live skill API: https://covenant-skill.onrender.com
 
 | Component | Status |
 |---|---|
-| `@covenant/mcp` NPM package | ✅ publish-ready |
+| `covenant-mcp` NPM package | ✅ publish-ready |
 | MCP tool descriptions | ✅ agent-optimized |
 | Smart contracts (Pharos) | ✅ deployed + verified |
 | Tests (Foundry + Vitest) | ✅ |

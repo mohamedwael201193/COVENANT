@@ -1,8 +1,15 @@
 {
-  "name": "@covenant/skill",
-  "version": "0.1.0",
-  "description": "COVENANT skill engine — preflight, attestation, and chain layer",
+  "name": "covenant-skill",
+  "version": "0.1.1",
+  "description": "COVENANT skill engine — preflight, attestation, and chain layer for agent trust on Pharos",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohamedwael201193/COVENANT.git",
+    "directory": "packages/skill"
+  },
+  "keywords": ["mcp", "covenant", "pharos", "agent-trust", "preflight"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -19,8 +26,10 @@
     "covenant-skill": "./dist/index.js",
     "covenant-mcp": "./dist/mcp/cli.js"
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "pnpm run build",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
@@ -30,7 +39,7 @@
     "validate:llm": "tsx scripts/validate-llm.ts"
   },
   "dependencies": {
-    "@covenant/shared": "workspace:*",
+    "covenant-shared": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -39,13 +48,6 @@
     "viem": "^2.23.2",
     "zod": "^3.24.2"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
@@ -53,5 +55,11 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

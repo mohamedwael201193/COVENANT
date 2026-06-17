@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { config as loadDotenv } from "dotenv";
 import { resolve } from "node:path";
 import { createPublicClient, http } from "viem";
-import { abis, loadChainConfig, PHAROS_ATLANTIC_CHAIN_ID } from "@covenant/shared";
+import { abis, loadChainConfig, PHAROS_ATLANTIC_CHAIN_ID } from "covenant-shared";
 import { probeRpcCapabilities } from "../src/engine/simulator.js";
 
 loadDotenv({ path: resolve(import.meta.dirname, "../../../.env") });

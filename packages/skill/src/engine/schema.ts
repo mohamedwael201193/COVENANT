@@ -6,7 +6,7 @@ import {
   type Intent,
   type PreflightContext,
   type RuleViolation,
-} from "@covenant/shared";
+} from "covenant-shared";
 
 const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 const hexSchema = z.string().regex(/^0x([a-fA-F0-9]*|)$/);

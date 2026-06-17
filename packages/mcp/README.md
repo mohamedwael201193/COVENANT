@@ -1,4 +1,4 @@
-# @covenant/mcp
+# covenant-mcp
 
 **Stripe for Agent Trust** — MCP server for credible-commitment preflight on [Pharos Atlantic](https://pharosnetwork.xyz) (chainId `688689`).
 
@@ -8,7 +8,7 @@ Any AI agent installs COVENANT in under 5 minutes and gets 10 tools for identity
 
 ```bash
 # 1. One-command setup (writes .env.covenant + Cursor example)
-npx @covenant/mcp init
+npx covenant-mcp init
 
 # 2. Fill secrets in .env.covenant (RPC, GoPlus, attester key)
 
@@ -16,7 +16,7 @@ npx @covenant/mcp init
 #    Copy packages/mcp/config/cursor.mcp.json → .cursor/mcp.json
 
 # 4. Verify
-npx @covenant/mcp   # should stay running on stdio (Ctrl+C to exit)
+npx covenant-mcp   # should stay running on stdio (Ctrl+C to exit)
 ```
 
 ### Required environment
@@ -72,8 +72,8 @@ See [docs/skill/EXAMPLES.md](../../docs/skill/EXAMPLES.md) for full flows and in
 
 ```bash
 pnpm install
-pnpm --filter @covenant/skill build
-pnpm --filter @covenant/mcp build
+pnpm --filter covenant-skill build
+pnpm --filter covenant-mcp build
 node packages/mcp/dist/cli.js
 ```
 

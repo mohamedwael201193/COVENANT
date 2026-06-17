@@ -5,7 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Logger } from "pino";
-import { createChainClients } from "../chain/clients.js";
+import { createChainClients, createPublicChainClients } from "../chain/clients.js";
 import { GoPlusClient } from "../engine/riskRead.goplus.js";
 import { LlmExplainer } from "../engine/explainer.llm.js";
 import type { EnvConfig } from "../config.js";
@@ -14,18 +14,31 @@ import {
   MCP_SERVER_INSTRUCTIONS,
   resolveToolName,
   toolDefinitions,
+  type ToolName,
 } from "./definitions.js";
 import { loadMcpConfig, resolveOwnerPrivateKey, type McpEnv } from "./config.js";
+
+const READ_ONLY_TOOLS = new Set<ToolName>([
+  "covenant_health",
+  "covenant_reputation",
+  "covenant_get_receipt",
+  "covenant_simulate",
+]);
+
+const GOPLUS_TOOLS = new Set<ToolName>([
+  "covenant_verify_counterparty",
+  "covenant_preflight",
+]);
 
 function mcpEnvToSkillEnv(mcp: McpEnv): EnvConfig {
   const pk = resolveOwnerPrivateKey(mcp);
   if (!pk) {
     throw new Error(
-      "DEPLOYER_PRIVATE_KEY or COVENANT_OWNER_PRIVATE_KEY required for this tool. Read-only tools need PHAROS_RPC_URL only if using REST proxy.",
+      "Set DEPLOYER_PRIVATE_KEY or COVENANT_OWNER_PRIVATE_KEY in MCP server env for this tool.",
     );
   }
   if (!mcp.GOPLUS_APP_KEY || !mcp.GOPLUS_APP_SECRET) {
-    throw new Error("GOPLUS_APP_KEY and GOPLUS_APP_SECRET required for COVENANT MCP");
+    throw new Error("Set GOPLUS_APP_KEY and GOPLUS_APP_SECRET in MCP server env for this tool.");
   }
   return {
     PHAROS_CHAIN_ID: mcp.PHAROS_CHAIN_ID,
@@ -43,14 +56,17 @@ function mcpEnvToSkillEnv(mcp: McpEnv): EnvConfig {
   } as EnvConfig;
 }
 
-let cachedCtx: ReturnType<typeof buildContext> | null = null;
+type McpContext = ReturnType<typeof buildFullContext>;
+
+let cachedFullCtx: McpContext | null = null;
+let cachedPublicCtx: ReturnType<typeof buildPublicContext> | null = null;
 
 /** Reuse REST server chain clients when skill index enables MCP stdio */
-export function setMcpContext(ctx: ReturnType<typeof buildContext>): void {
-  cachedCtx = ctx;
+export function setMcpContext(ctx: McpContext): void {
+  cachedFullCtx = ctx;
 }
 
-function buildContext(mcp: McpEnv) {
+function buildFullContext(mcp: McpEnv) {
   const env = mcpEnvToSkillEnv(mcp);
   const clients = createChainClients(env);
   const services = {
@@ -62,11 +78,58 @@ function buildContext(mcp: McpEnv) {
   return { clients, services };
 }
 
-function getContext(): ReturnType<typeof buildContext> {
-  if (!cachedCtx) {
-    cachedCtx = buildContext(loadMcpConfig());
+function buildPublicContext(mcp: McpEnv) {
+  const partial = createPublicChainClients(mcp);
+  const stubAccount = { address: partial.contracts.attester } as McpContext["clients"]["attesterAccount"];
+  const clients = {
+    ...partial,
+    walletClient: null as unknown as McpContext["clients"]["walletClient"],
+    attesterAccount: stubAccount,
+  };
+  const env = {
+    PHAROS_CHAIN_ID: mcp.PHAROS_CHAIN_ID,
+    PHAROS_RPC_URL: mcp.PHAROS_RPC_URL,
+    PHAROS_RPC_URL_FALLBACK: mcp.PHAROS_RPC_URL_FALLBACK,
+    GOPLUS_API_BASE: mcp.GOPLUS_API_BASE,
+    PREFLIGHT_LLM_ENABLED: mcp.PREFLIGHT_LLM_ENABLED,
+    PREFLIGHT_LLM_TIMEOUT_MS: mcp.PREFLIGHT_LLM_TIMEOUT_MS,
+  } as EnvConfig;
+  return {
+    clients: clients as McpContext["clients"],
+    services: {
+      clients: clients as McpContext["clients"],
+      env,
+      goplus: mcp.GOPLUS_APP_KEY && mcp.GOPLUS_APP_SECRET ? new GoPlusClient(env) : null,
+      explainer: new LlmExplainer(env),
+    },
+  };
+}
+
+function getContextForTool(name: ToolName): McpContext {
+  if (cachedFullCtx) {
+    return cachedFullCtx;
   }
-  return cachedCtx;
+
+  const mcp = loadMcpConfig();
+
+  if (READ_ONLY_TOOLS.has(name)) {
+    if (!cachedPublicCtx) {
+      cachedPublicCtx = buildPublicContext(mcp);
+    }
+    return cachedPublicCtx as McpContext;
+  }
+
+  if (GOPLUS_TOOLS.has(name) && mcp.GOPLUS_APP_KEY && mcp.GOPLUS_APP_SECRET) {
+    if (!cachedFullCtx) {
+      cachedFullCtx = buildFullContext(mcp);
+    }
+    return cachedFullCtx;
+  }
+
+  if (!cachedFullCtx) {
+    cachedFullCtx = buildFullContext(mcp);
+  }
+  return cachedFullCtx;
 }
 
 export function createMcpServer(log: Logger): Server {
@@ -83,7 +146,7 @@ export function createMcpServer(log: Logger): Server {
       name: t.name,
       description: t.description,
       inputSchema: t.inputSchema,
-      ...( "annotations" in t ? { annotations: t.annotations } : {}),
+      ...("annotations" in t ? { annotations: t.annotations } : {}),
     })),
   }));
 
@@ -98,7 +161,7 @@ export function createMcpServer(log: Logger): Server {
     }
 
     try {
-      const result = await dispatchTool(name, request.params.arguments ?? {}, getContext());
+      const result = await dispatchTool(name, request.params.arguments ?? {}, getContextForTool(name));
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };

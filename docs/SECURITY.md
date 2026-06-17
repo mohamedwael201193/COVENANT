@@ -121,7 +121,7 @@ This catches obvious revert paths but **not** deep multi-hop exploit chains. Doc
 - [ ] GoPlus credentials valid
 - [ ] At least one LLM key configured (explanations)
 - [ ] No secrets in git
-- [ ] Egress tests pass: `pnpm --filter @covenant/skill test`
+- [ ] Egress tests pass: `pnpm --filter covenant-skill test`
 - [ ] LLM ALLOW rejection tests pass
 - [ ] CertiK scan when access available
 

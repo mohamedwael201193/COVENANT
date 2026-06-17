@@ -5,7 +5,7 @@ Install COVENANT as an MCP server — not a dashboard. The web UI is a **demo on
 ## Quick install (< 5 min)
 
 ```bash
-npx @covenant/mcp init
+npx covenant-mcp init
 ```
 
 Add `packages/mcp/config/cursor.mcp.json` to your MCP client, fill env vars, restart the client.
@@ -49,7 +49,7 @@ Full schemas: [docs/MCP_REFERENCE.md](../docs/MCP_REFERENCE.md)
 ## Package
 
 ```bash
-npx @covenant/mcp
+npx covenant-mcp
 ```
 
-NPM: `@covenant/mcp` · GitHub: [COVENANT](https://github.com/mohamedwael201193/COVENANT)
+NPM: `covenant-mcp` · GitHub: [COVENANT](https://github.com/mohamedwael201193/COVENANT)

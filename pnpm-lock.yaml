@@ -16,9 +16,6 @@ importers:
 
   packages/indexer:
     dependencies:
-      '@covenant/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@prisma/client':
         specifier: ^6.4.1
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
@@ -28,6 +25,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.6
+      covenant-shared:
+        specifier: workspace:*
+        version: link:../shared
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
@@ -71,7 +71,7 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@covenant/skill':
+      covenant-skill:
         specifier: workspace:*
         version: link:../skill
     devDependencies:
@@ -122,15 +122,15 @@ importers:
 
   packages/skill:
     dependencies:
-      '@covenant/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.1
         version: 1.29.0(zod@3.25.76)
       cors:
         specifier: ^2.8.5
         version: 2.8.6
+      covenant-shared:
+        specifier: workspace:*
+        version: link:../shared
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1

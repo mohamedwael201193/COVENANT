@@ -1,4 +1,4 @@
-import { abis } from "@covenant/shared";
+import { abis } from "covenant-shared";
 import type { Logger } from "pino";
 import { verdictLabel } from "../engine/schema.js";
 import { publishDecisionEvent } from "../http/sse.js";

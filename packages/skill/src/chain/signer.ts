@@ -4,7 +4,7 @@ import {
   type AllowAttestation,
   type Intent,
   type SignedAllowAttestation,
-} from "@covenant/shared";
+} from "covenant-shared";
 import type { ChainClients } from "./clients.js";
 
 export { computeIntentHash };

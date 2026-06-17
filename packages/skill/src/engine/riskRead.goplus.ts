@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { Address } from "viem";
-import type { RiskSignal } from "@covenant/shared";
+import type { RiskSignal } from "covenant-shared";
 import type { EnvConfig } from "../config.js";
 import { egressAllowlist, fetchWithEgress } from "../egress.js";
 

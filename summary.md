@@ -199,7 +199,7 @@ pnpm --filter @covenant/indexer exec tsx scripts/validate-redis.ts
 | Name | `covenant-skill` |
 | Runtime | Node |
 | Plan | Free |
-| Build command | `corepack enable && pnpm install --frozen-lockfile && pnpm generate:abis && pnpm --filter @covenant/shared build && pnpm --filter @covenant/skill build && pnpm --filter @covenant/indexer build` |
+| Build command | `corepack enable && pnpm install --frozen-lockfile && pnpm generate:abis && pnpm --filter covenant-shared build && pnpm --filter covenant-skill build && pnpm --filter @covenant/indexer build` |
 | Start command | `bash scripts/render-start-backend.sh` |
 | Health check path | `/health` |
 
@@ -236,7 +236,7 @@ Also committed in `packages/web/.env.production` for automatic builds.
 |-------|-------|-----|
 | ABI generation failed on Render | No Foundry installed on Render | Skip `forge build` when committed ABIs exist (`generate-abis.mjs`) |
 | Typecheck failed — missing Prisma client | CI ran typecheck before `prisma generate` | Generate Prisma client before typecheck in CI |
-| Typecheck failed — missing shared types | `@covenant/shared` not built | Build shared package before typecheck |
+| Typecheck failed — missing shared types | `covenant-shared` not built | Build shared package before typecheck |
 | Foundry artifacts missing in CI | ABI gen ran before contract compile | Run Foundry build before ABI generation |
 
 ### 8.2 Render Blueprint failures (free tier)
@@ -285,8 +285,8 @@ pnpm test
 |---------|-------|-------|
 | `@covenant/indexer` | 6 passed, 1 skipped | Queue job IDs, scoring oracle |
 | `@covenant/web` | 4 passed | Utils, API defaults |
-| `@covenant/skill` | Engine, schema tests | Preflight logic |
-| `@covenant/shared` | EIP-712, chain config | |
+| `covenant-skill` | Engine, schema tests | Preflight logic |
+| `covenant-shared` | EIP-712, chain config | |
 
 ### 9.3 Validation scripts
 
@@ -294,8 +294,8 @@ pnpm test
 pnpm validate:env                              # Skill env + contracts + LLM providers
 pnpm --filter @covenant/indexer exec tsx scripts/validate-db.ts
 pnpm --filter @covenant/indexer exec tsx scripts/validate-redis.ts
-pnpm --filter @covenant/skill exec tsx scripts/validate-goplus.ts
-pnpm --filter @covenant/skill exec tsx scripts/validate-llm.ts
+pnpm --filter covenant-skill exec tsx scripts/validate-goplus.ts
+pnpm --filter covenant-skill exec tsx scripts/validate-llm.ts
 ```
 
 ### 9.4 On-chain verification

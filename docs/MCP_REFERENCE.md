@@ -1,6 +1,6 @@
 # COVENANT MCP Reference
 
-Install: `npx @covenant/mcp` · Package: `@covenant/mcp` · See [docs/skill/INSTALL.md](./skill/INSTALL.md)
+Install: `npx covenant-mcp` · Package: `covenant-mcp` · See [docs/skill/INSTALL.md](./skill/INSTALL.md)
 
 The MCP server exposes **10 tools** (prefixed `covenant_*`) over stdio. Legacy names (`preflight`, `reputation`, …) still resolve.
 
@@ -388,7 +388,7 @@ Example `.cursor/mcp.json` entry:
 }
 ```
 
-Ensure `.env` is populated or env vars are inlined. Build first: `pnpm --filter @covenant/skill build`.
+Ensure `.env` is populated or env vars are inlined. Build first: `pnpm --filter covenant-skill build`.
 
 ## Related Docs
 

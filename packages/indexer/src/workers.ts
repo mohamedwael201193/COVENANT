@@ -8,7 +8,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import type { Job } from "bullmq";
 import type { Logger } from "pino";
-import { abis } from "@covenant/shared";
+import { abis } from "covenant-shared";
 import type { EnvConfig } from "./config.js";
 import { getChainConfig } from "./config.js";
 import { prisma } from "./db/client.js";

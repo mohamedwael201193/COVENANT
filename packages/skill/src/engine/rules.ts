@@ -5,7 +5,7 @@ import {
   type Intent,
   type PreflightContext,
   type RuleViolation,
-} from "@covenant/shared";
+} from "covenant-shared";
 
 function isAddressInList(address: string, list: string[]): boolean {
   const normalized = address.toLowerCase();

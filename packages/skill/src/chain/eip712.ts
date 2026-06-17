@@ -4,4 +4,4 @@ export {
   createAllowAttestationMessage,
   hashAllowAttestation,
   hashCovenantTerms,
-} from "@covenant/shared";
+} from "covenant-shared";

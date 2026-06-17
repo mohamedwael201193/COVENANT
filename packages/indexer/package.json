@@ -18,7 +18,7 @@
     "validate:redis": "tsx scripts/validate-redis.ts"
   },
   "dependencies": {
-    "@covenant/shared": "workspace:*",
+    "covenant-shared": "workspace:*",
     "@prisma/client": "^6.4.1",
     "bullmq": "^5.41.0",
     "cors": "^2.8.5",

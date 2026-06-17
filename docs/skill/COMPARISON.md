@@ -35,7 +35,7 @@ Comparison against widely adopted MCP servers on GitHub (patterns, not feature p
 
 ## How to surpass them
 
-1. **Publish `@covenant/mcp` to npm** — one-command install ✅ (this release)
+1. **Publish `covenant-mcp` to npm** — one-command install ✅ (this release)
 2. **Namespaced tools + workflow instructions** ✅
 3. **Hosted MCP (SSE)** on Render — no local keys for read tools
 4. **MCP resources** — `covenant://receipt/{id}`, `covenant://agent/{addr}/covenant`

@@ -4,7 +4,7 @@ import { run } from "@openai/agents/run";
 const covenantMcp = new MCPServerStdio({
   name: "covenant",
   command: "npx",
-  args: ["-y", "@covenant/mcp"],
+  args: ["-y", "covenant-mcp"],
   env: {
     PHAROS_RPC_URL: process.env.PHAROS_RPC_URL!,
     GOPLUS_APP_KEY: process.env.GOPLUS_APP_KEY!,

@@ -4,7 +4,7 @@ description: Trust rail for autonomous agents on Pharos — preflight, attestati
 version: 0.1.0
 chain: pharos-atlantic
 chainId: 688689
-install: npx @covenant/mcp init
+install: npx covenant-mcp init
 ---
 
 # COVENANT MCP Skill
@@ -14,7 +14,7 @@ install: npx @covenant/mcp init
 ## Install
 
 ```bash
-npx @covenant/mcp init
+npx covenant-mcp init
 ```
 
 ## Tools

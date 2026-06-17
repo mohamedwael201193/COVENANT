@@ -1,4 +1,4 @@
-import { TrustCapitalTier, Verdict } from "@covenant/shared";
+import { TrustCapitalTier, Verdict } from "covenant-shared";
 
 /** TC delta applied per decision verdict (deterministic oracle rules). */
 export const SCORE_DELTA: Record<number, bigint> = {

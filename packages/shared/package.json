@@ -1,8 +1,15 @@
 {
-  "name": "@covenant/shared",
-  "version": "0.1.0",
-  "private": true,
+  "name": "covenant-shared",
+  "version": "0.1.1",
+  "description": "Shared chain config, types, and contract ABIs for COVENANT agent trust on Pharos",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohamedwael201193/COVENANT.git",
+    "directory": "packages/shared"
+  },
+  "keywords": ["pharos", "covenant", "agent-trust", "viem", "eip-712"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -13,8 +20,10 @@
     },
     "./package.json": "./package.json"
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "pnpm run generate:abis && tsc",
+    "prepublishOnly": "pnpm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "generate:abis": "node scripts/generate-abis.mjs"
@@ -26,5 +35,11 @@
     "@types/node": "^22.13.4",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

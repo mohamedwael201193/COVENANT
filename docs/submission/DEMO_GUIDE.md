@@ -119,7 +119,7 @@ Or dashboard reputation view.
 Full scripted demo:
 
 ```bash
-pnpm --filter @covenant/skill demo:live
+pnpm --filter covenant-skill demo:live
 # or: tsx packages/skill/scripts/demo-live.ts
 ```
 

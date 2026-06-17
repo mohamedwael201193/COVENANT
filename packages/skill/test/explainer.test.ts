@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Verdict } from "@covenant/shared";
+import { Verdict } from "covenant-shared";
 import { ruleBasedFallback } from "../src/engine/explainer.llm.js";
 import { llmExplanationSchema } from "../src/engine/schema.js";
 

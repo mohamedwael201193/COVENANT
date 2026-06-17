@@ -4,7 +4,7 @@ import {
   Verdict,
   type CovenantTerms,
   type Intent,
-} from "@covenant/shared";
+} from "covenant-shared";
 import { evaluateRules, mergeVerdicts } from "../src/engine/rules.js";
 
 const AGENT = "0x1111111111111111111111111111111111111111" as const;

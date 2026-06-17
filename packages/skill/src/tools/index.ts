@@ -4,7 +4,7 @@ import {
   keccak256,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { hashCovenantTerms } from "@covenant/shared";
+import { hashCovenantTerms } from "covenant-shared";
 import type { ChainClients } from "../chain/clients.js";
 import {
   getCovenantRegistryRead,
@@ -167,13 +167,26 @@ export async function handleRotateKey(clients: ChainClients, args: unknown) {
 }
 
 export async function handleHealth(clients: ChainClients) {
-  const health = await collectHealthState(clients);
-  return {
-    status: health.attesterMatch ? "ok" : "degraded",
-    attesterMatch: health.attesterMatch,
-    attesterBalanceWei: health.attesterBalance.toString(),
-    chainId: clients.chain.id,
-  };
+  try {
+    const health = await collectHealthState(clients);
+    return {
+      status: health.attesterMatch ? "ok" : "degraded",
+      attesterMatch: health.attesterMatch,
+      attesterBalanceWei: health.attesterBalance.toString(),
+      chainId: clients.chain.id,
+      blockNumber: health.rpc.blockNumber.toString(),
+    };
+  } catch {
+    const { probeRpcCapabilities } = await import("../engine/simulator.js");
+    const rpc = await probeRpcCapabilities(clients.publicClient);
+    return {
+      status: rpc.ethCall ? "ok" : "degraded",
+      mode: "read-only",
+      chainId: clients.chain.id,
+      blockNumber: rpc.blockNumber.toString(),
+      ethCall: rpc.ethCall,
+    };
+  }
 }
 
 export {

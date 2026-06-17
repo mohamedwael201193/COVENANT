@@ -5,7 +5,7 @@ Install COVENANT MCP for any agent client in five steps.
 ## Step 1 — Initialize (30 seconds)
 
 ```bash
-npx @covenant/mcp init
+npx covenant-mcp init
 ```
 
 Creates `.env.covenant` and `.cursor/mcp.json.example`.
@@ -34,7 +34,7 @@ Pharos faucet: Pharos Atlantic testnet docs
   "mcpServers": {
     "covenant": {
       "command": "npx",
-      "args": ["-y", "@covenant/mcp"],
+      "args": ["-y", "covenant-mcp"],
       "env": {
         "PHAROS_RPC_URL": "https://atlantic-rpc.pharosnetwork.xyz",
         "GOPLUS_APP_KEY": "...",
@@ -69,7 +69,7 @@ Then:
 
 | Issue | Fix |
 |---|---|
-| Tool list empty | Restart MCP client; check `npx @covenant/mcp` runs without env errors |
+| Tool list empty | Restart MCP client; check `npx covenant-mcp` runs without env errors |
 | `env invalid` | Set `PHAROS_RPC_URL` |
 | `GOPLUS required` | Set both GoPlus keys |
 | Preflight slow | Set `PREFLIGHT_LLM_ENABLED=false` |
@@ -79,7 +79,7 @@ Then:
 
 ```bash
 pnpm install
-pnpm --filter @covenant/skill build
-pnpm --filter @covenant/mcp build
+pnpm --filter covenant-skill build
+pnpm --filter covenant-mcp build
 MCP_STDIO_ENABLED=true pnpm dev:skill
 ```

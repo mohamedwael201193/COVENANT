@@ -35,7 +35,7 @@ IDENTITY → COVENANT → CERTIFICATION (rules + simulation + GoPlus) → GUARDE
 ```
 
 - **Deterministic safety core:** LLM explains only; never authorizes funds
-- **MCP Skill:** `@covenant/mcp` (stdio) + REST host `packages/skill` `:8787`
+- **MCP Skill:** `covenant-mcp` (stdio) + REST host `packages/skill` `:8787`
 - **Indexer:** `packages/indexer` (BullMQ + Postgres projections)
 - **Dashboard (demo):** `packages/web`
 
@@ -61,12 +61,12 @@ pnpm dev:web      # dashboard :5173
 curl http://localhost:8787/health
 ```
 
-**The credible-commitment MCP skill for autonomous agents** — install with `npx @covenant/mcp init`. Dashboard is demo-only.
+**The credible-commitment MCP skill for autonomous agents** — install with `npx covenant-mcp init`. Dashboard is demo-only.
 
 ## Agent skill (primary product)
 
 ```bash
-npx @covenant/mcp init
+npx covenant-mcp init
 ```
 
 | Doc | Description |
@@ -74,7 +74,7 @@ npx @covenant/mcp init
 | [AGENTS.md](../AGENTS.md) | Agent skill manifest |
 | [skill/INSTALL.md](./skill/INSTALL.md) | 5-minute install |
 | [skill/EXAMPLES.md](./skill/EXAMPLES.md) | Send-money workflow |
-| [packages/mcp/README.md](../packages/mcp/README.md) | `@covenant/mcp` package |
+| [packages/mcp/README.md](../packages/mcp/README.md) | `covenant-mcp` package |
 
 ## MCP Tools (10)
 

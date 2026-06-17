@@ -1,7 +1,7 @@
 import { config as loadDotenv } from "dotenv";
 import { resolve } from "node:path";
 import { z } from "zod";
-import { loadChainConfig, PHAROS_ATLANTIC_CHAIN_ID } from "@covenant/shared";
+import { loadChainConfig, PHAROS_ATLANTIC_CHAIN_ID } from "covenant-shared";
 
 const MONOREPO_ROOT = resolve(import.meta.dirname, "../../..");
 

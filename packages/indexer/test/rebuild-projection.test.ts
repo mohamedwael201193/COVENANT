@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
-import { Verdict } from "@covenant/shared";
+import { Verdict } from "covenant-shared";
 import { prisma, disconnectDb } from "../src/db/client.js";
 import { clearProjections, projectLog } from "../src/projectors/index.js";
 import type { RawLogPayload } from "../src/types.js";

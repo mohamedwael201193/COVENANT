@@ -95,13 +95,13 @@ The repo includes a [Render Blueprint](../render.yaml) defining three web servic
 **Skill:**
 ```bash
 corepack enable && pnpm install --frozen-lockfile && pnpm generate:abis &&
-pnpm --filter @covenant/shared build && pnpm --filter @covenant/skill build
+pnpm --filter covenant-shared build && pnpm --filter covenant-skill build
 ```
 
 **Indexer:**
 ```bash
 corepack enable && pnpm install --frozen-lockfile && pnpm generate:abis &&
-pnpm --filter @covenant/shared build && pnpm --filter @covenant/indexer build
+pnpm --filter covenant-shared build && pnpm --filter @covenant/indexer build
 # preDeploy: cd packages/indexer && npx prisma migrate deploy
 ```
 

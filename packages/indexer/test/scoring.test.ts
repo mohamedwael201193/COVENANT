@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Verdict } from "@covenant/shared";
+import { Verdict } from "covenant-shared";
 import {
   applyBreachSlash,
   applyVerdictDelta,

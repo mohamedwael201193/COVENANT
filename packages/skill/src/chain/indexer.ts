@@ -1,4 +1,4 @@
-import { abis, getIndexerStartBlock } from "@covenant/shared";
+import { abis, getIndexerStartBlock } from "covenant-shared";
 import type { Address, Hex } from "viem";
 import { verdictLabel } from "../engine/schema.js";
 import type { ChainClients } from "./clients.js";

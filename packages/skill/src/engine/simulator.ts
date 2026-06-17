@@ -1,5 +1,5 @@
 import type { Hex, PublicClient } from "viem";
-import type { Intent, SimulationResult } from "@covenant/shared";
+import type { Intent, SimulationResult } from "covenant-shared";
 import type { ChainClients } from "../chain/clients.js";
 
 type DebugTraceClient = PublicClient & {

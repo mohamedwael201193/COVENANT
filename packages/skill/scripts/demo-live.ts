@@ -22,8 +22,8 @@ import {
   computeIntentHash,
   buildAllowAttestationTypedData,
   Verdict,
-} from "@covenant/shared";
-import { abis } from "@covenant/shared";
+} from "covenant-shared";
+import { abis } from "covenant-shared";
 
 const IdentityRegistryAbi = abis.identityRegistry;
 const CovenantRegistryAbi = abis.covenantRegistry;

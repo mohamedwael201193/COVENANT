@@ -15,7 +15,7 @@ import {
   abis,
   loadChainConfig,
   PHAROS_ATLANTIC_CHAIN_ID,
-} from "@covenant/shared";
+} from "covenant-shared";
 import type { EnvConfig } from "../config.js";
 
 function buildChain(config: ReturnType<typeof loadChainConfig>): Chain {
@@ -41,6 +41,24 @@ function buildRpcTransport(rpcUrls: string[]): Transport {
     return fallback(urls.map((url) => http(url)));
   }
   return http(urls[0]!);
+}
+
+export function createPublicChainClients(config: {
+  PHAROS_RPC_URL: string;
+  PHAROS_RPC_URL_FALLBACK?: string;
+  PHAROS_CHAIN_ID: number;
+}): Pick<ChainClients, "publicClient" | "contracts" | "chain"> {
+  process.env.PHAROS_RPC_URL = config.PHAROS_RPC_URL;
+  if (config.PHAROS_RPC_URL_FALLBACK) {
+    process.env.PHAROS_RPC_URL_FALLBACK = config.PHAROS_RPC_URL_FALLBACK;
+  }
+  process.env.PHAROS_CHAIN_ID = String(config.PHAROS_CHAIN_ID);
+  const chainConfig = loadChainConfig(process.env);
+  const chain = buildChain(chainConfig);
+  const rpcUrls = [config.PHAROS_RPC_URL, config.PHAROS_RPC_URL_FALLBACK].filter(Boolean) as string[];
+  const transport = buildRpcTransport([...new Set(rpcUrls)]);
+  const publicClient = createPublicClient({ chain, transport });
+  return { publicClient, contracts: chainConfig.contracts, chain };
 }
 
 export function createChainClients(env: EnvConfig): ChainClients {

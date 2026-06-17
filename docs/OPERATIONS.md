@@ -203,7 +203,7 @@ MCP_STDIO_ENABLED=true pnpm dev:skill
 Or build + run:
 
 ```bash
-pnpm --filter @covenant/skill build
+pnpm --filter covenant-skill build
 MCP_STDIO_ENABLED=true node packages/skill/dist/index.js
 ```
 

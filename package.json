@@ -9,20 +9,20 @@
     "test:contracts": "pnpm --filter @covenant/contracts test",
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm -r run typecheck",
-    "dev:skill": "pnpm --filter @covenant/skill dev",
+    "dev:skill": "pnpm --filter covenant-skill dev",
     "dev:indexer": "pnpm --filter @covenant/indexer dev",
     "dev:web": "pnpm --filter @covenant/web dev",
     "deploy:contracts": "pnpm --filter @covenant/contracts deploy",
     "verify:contracts": "pnpm --filter @covenant/contracts verify",
-    "validate:env": "pnpm --filter @covenant/skill validate:env",
-    "generate:abis": "pnpm --filter @covenant/shared generate:abis",
+    "validate:env": "pnpm --filter covenant-skill validate:env",
+    "generate:abis": "pnpm --filter covenant-shared generate:abis",
     "verify:deploy": "pnpm exec tsx scripts/verify-deploy.ts",
     "smoke:production": "pnpm exec tsx scripts/smoke-production.ts",
     "prove:trust-capital": "pnpm exec tsx scripts/prove-trust-capital.ts",
     "bench:preflight": "pnpm exec tsx scripts/benchmark-preflight.ts",
-    "demo:live": "pnpm --filter @covenant/skill exec tsx scripts/demo-live.ts",
+    "demo:live": "pnpm --filter covenant-skill exec tsx scripts/demo-live.ts",
     "mcp:init": "node packages/mcp/scripts/init.mjs",
-    "mcp:build": "pnpm --filter @covenant/skill build && pnpm --filter @covenant/mcp build"
+    "mcp:build": "pnpm --filter covenant-skill build && pnpm --filter covenant-mcp build"
   },
   "engines": {
     "node": ">=20"

@@ -3,7 +3,7 @@
 import { config as loadEnv } from "dotenv";
 import { resolve } from "node:path";
 import { createPublicClient, http, parseAbiItem } from "viem";
-import { loadChainConfig, abis } from "@covenant/shared";
+import { loadChainConfig, abis } from "covenant-shared";
 import { PrismaClient } from "@prisma/client";
 import { toolDefinitions, dispatchTool } from "../packages/skill/src/tools/index.js";
 import { createChainClients } from "../packages/skill/src/chain/clients.js";

@@ -12,7 +12,7 @@ import {
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { abis, loadChainConfig } from "@covenant/shared";
+import { abis, loadChainConfig } from "covenant-shared";
 import { applyVerdictDelta, proposeScoreAfterDecision } from "../packages/indexer/src/scoring/oracle.js";
 
 loadEnv({ path: resolve(process.cwd(), ".env") });

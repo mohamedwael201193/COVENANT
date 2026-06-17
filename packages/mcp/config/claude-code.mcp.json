@@ -3,7 +3,7 @@
     "covenant": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@covenant/mcp"],
+      "args": ["-y", "covenant-mcp"],
       "env": {
         "PHAROS_RPC_URL": "https://atlantic-rpc.pharosnetwork.xyz",
         "GOPLUS_APP_KEY": "YOUR_GOPLUS_APP_KEY",

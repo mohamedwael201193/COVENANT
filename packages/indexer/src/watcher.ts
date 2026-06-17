@@ -9,7 +9,7 @@ import {
   type PublicClient,
 } from "viem";
 import type { Logger } from "pino";
-import { abis, type ChainConfig } from "@covenant/shared";
+import { abis, type ChainConfig } from "covenant-shared";
 import { prisma } from "./db/client.js";
 import type { EnvConfig } from "./config.js";
 import { INDEXER_STATE_LAST_BLOCK, type DecodedIndexerEvent, type RawLogPayload } from "./types.js";

@@ -4,7 +4,7 @@ import {
   TrustCapitalTier,
   Verdict,
   type PreflightResult,
-} from "@covenant/shared";
+} from "covenant-shared";
 import type { ChainClients } from "../chain/clients.js";
 import { readReputation } from "../chain/clients.js";
 import { signAllowAttestation } from "../chain/signer.js";

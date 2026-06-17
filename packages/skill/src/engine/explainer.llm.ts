@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Verdict, type LlmExplanation, type RuleViolation } from "@covenant/shared";
+import { Verdict, type LlmExplanation, type RuleViolation } from "covenant-shared";
 import type { EnvConfig } from "../config.js";
 import { egressAllowlist, fetchWithEgress } from "../egress.js";
 import { llmExplanationSchema } from "./schema.js";

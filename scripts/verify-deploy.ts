@@ -5,7 +5,7 @@
 import { config as loadEnv } from "dotenv";
 import { resolve } from "node:path";
 import { createPublicClient, http } from "viem";
-import { loadChainConfig, abis } from "@covenant/shared";
+import { loadChainConfig, abis } from "covenant-shared";
 
 loadEnv({ path: resolve(process.cwd(), ".env") });
 

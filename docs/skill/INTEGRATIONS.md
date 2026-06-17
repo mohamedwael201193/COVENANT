@@ -40,7 +40,7 @@ import { Agent, MCPServerStdio } from "@openai/agents";
 const covenant = new MCPServerStdio({
   name: "covenant",
   command: "npx",
-  args: ["-y", "@covenant/mcp"],
+  args: ["-y", "covenant-mcp"],
   env: { /* PHAROS_RPC_URL, GOPLUS_*, DEPLOYER_PRIVATE_KEY */ },
 });
 
@@ -62,7 +62,7 @@ Any stdio MCP client:
 ```json
 {
   "command": "npx",
-  "args": ["-y", "@covenant/mcp"],
+  "args": ["-y", "covenant-mcp"],
   "env": { "PHAROS_RPC_URL": "...", "GOPLUS_APP_KEY": "...", "GOPLUS_APP_SECRET": "...", "DEPLOYER_PRIVATE_KEY": "0x..." }
 }
 ```

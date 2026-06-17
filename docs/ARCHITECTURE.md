@@ -52,8 +52,8 @@ IDENTITY → COVENANT → CERTIFICATION → GUARDED EXECUTION → DecisionLog �
 | Package | Path | Role |
 |---|---|---|
 | `@covenant/contracts` | `packages/contracts` | Foundry Solidity: IdentityRegistry, CovenantRegistry, GuardedExecutor, DecisionLog, ReputationRegistry |
-| `@covenant/shared` | `packages/shared` | ABIs, chain config, EIP-712 helpers, shared TypeScript types |
-| `@covenant/skill` | `packages/skill` | MCP skill server + REST API on port **8787** |
+| `covenant-shared` | `packages/shared` | ABIs, chain config, EIP-712 helpers, shared TypeScript types |
+| `covenant-skill` | `packages/skill` | MCP skill server + REST API on port **8787** |
 | `@covenant/indexer` | `packages/indexer` | Event watcher, BullMQ workers, Prisma/Postgres projections, REST on **8788** |
 | `@covenant/web` | `packages/web` | React + Vite dashboard (shadcn/ui, TanStack Query) |
 | `@covenant/security/certik` | `packages/security/certik` | CertiK Skill Scanner adapter (`WAITING_FOR_OFFICIAL_ACCESS`) |
