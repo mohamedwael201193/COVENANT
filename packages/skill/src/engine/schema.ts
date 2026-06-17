@@ -55,6 +55,7 @@ export const preflightRequestSchema = z.object({
 export const simulateRequestSchema = z.object({
   intent: intentSchema,
   from: addressSchema.optional(),
+  includeGasEstimate: z.boolean().default(false),
 });
 
 export const registerIdentitySchema = z.object({

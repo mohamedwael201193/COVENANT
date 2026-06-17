@@ -138,7 +138,7 @@ export async function handleSimulate(clients: ChainClients, args: unknown) {
     data: input.intent.data as `0x${string}`,
     value: input.intent.value,
     nonce: input.intent.nonce,
-  }, input.from as `0x${string}` | undefined);
+  }, input.from as `0x${string}` | undefined, { estimateGas: input.includeGasEstimate });
   return { ...result, gasEstimate: result.gasEstimate?.toString() };
 }
 
@@ -182,13 +182,32 @@ export async function handleGetReceipt(clients: ChainClients, args: unknown) {
 
 export async function handleReputation(clients: ChainClients, args: unknown) {
   const input = reputationSchema.parse(args);
-  const rep = await readReputation(clients, input.agent as `0x${string}`);
-  return {
-    agent: input.agent,
-    score: rep.score.toString(),
-    tier: rep.tier,
-    updatedAt: rep.updatedAt.toString(),
-  };
+  try {
+    const rep = await readReputation(clients, input.agent as `0x${string}`);
+    return {
+      status: "ok",
+      agent: input.agent,
+      score: rep.score.toString(),
+      tier: rep.tier,
+      updatedAt: rep.updatedAt.toString(),
+      source: "pharos",
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      status: "unavailable",
+      agent: input.agent,
+      score: null,
+      tier: null,
+      updatedAt: null,
+      source: "pharos",
+      message:
+        "Trust Capital RPC read failed. Retry shortly or set PHAROS_RPC_URL to another Atlantic RPC endpoint.",
+      detail: /fetch failed|ENOTFOUND|ECONNRESET|ETIMEDOUT|timeout|rate limit|cu limit exceeded/i.test(message)
+        ? "rpc_unavailable"
+        : message,
+    };
+  }
 }
 
 export async function handleRotateKey(clients: ChainClients, args: unknown) {

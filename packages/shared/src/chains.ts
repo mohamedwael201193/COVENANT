@@ -7,7 +7,10 @@ export const PHAROS_ATLANTIC_CHAIN_ID = 688689;
 export const DEFAULT_INDEXER_START_BLOCK = 24_340_730n;
 
 /** Public Pharos Atlantic RPC — no API key required. Override with PHAROS_RPC_URL if needed. */
-export const DEFAULT_RPC_URL = "https://atlantic-rpc.pharosnetwork.xyz";
+export const DEFAULT_RPC_URL = "https://atlantic.dplabs-internal.com";
+
+/** Secondary public RPC used when clients support fallback transports. */
+export const DEFAULT_RPC_FALLBACK_URL = "https://atlantic-rpc.pharosnetwork.xyz";
 
 export const DEFAULT_CONTRACTS = {
   identityRegistry: "0x05545F026b75f03aE9Cf1eA8a8373473c94ed323" as Address,
@@ -50,7 +53,7 @@ export function getIndexerStartBlock(env: NodeJS.ProcessEnv = process.env): bigi
 
 export function loadChainConfig(env: NodeJS.ProcessEnv = process.env): ChainConfig {
   const rpcPrimary = envOrDefault(env, "PHAROS_RPC_URL", DEFAULT_RPC_URL);
-  const rpcFallback = envOrDefault(env, "PHAROS_RPC_URL_FALLBACK", "");
+  const rpcFallback = envOrDefault(env, "PHAROS_RPC_URL_FALLBACK", DEFAULT_RPC_FALLBACK_URL);
   const explorer = envOrDefault(env, "PHAROS_EXPLORER_URL", "https://atlantic.pharosscan.xyz");
 
   const httpUrls = [rpcPrimary];

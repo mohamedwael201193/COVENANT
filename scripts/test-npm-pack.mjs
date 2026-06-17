@@ -41,7 +41,7 @@ try {
     stdio: "inherit",
     env: {
       ...process.env,
-      PHAROS_RPC_URL: "https://atlantic-rpc.pharosnetwork.xyz",
+      PHAROS_RPC_URL: "https://atlantic.dplabs-internal.com",
     },
   });
 

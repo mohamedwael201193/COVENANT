@@ -33,7 +33,7 @@ Production hardening assessment after Antigravity validation.
 |---|---|
 | preflight requires GoPlus | Skipped when unset (`GOPLUS_SKIPPED`) |
 | preflight requires DEPLOYER key | Evaluate-only; `covenant_sign_attestation` uses hosted API |
-| RPC confusion | Default `atlantic-rpc.pharosnetwork.xyz` (no API key) |
+| RPC confusion | Default official Pharos Atlantic RPC `atlantic.dplabs-internal.com` (no API key) |
 | onboarding friction | `packages/mcp/config/cursor.mcp.json` — no env vars |
 | wallet / approval missing | 6 session tools + dashboard `/approve/:id` |
 | latency | Fast health; lazy public client init |

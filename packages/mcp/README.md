@@ -40,6 +40,8 @@ COVENANT is **not** a custodian. It never holds user private keys.
 npx -y covenant-mcp init
 ```
 
+`init` writes `.cursor/mcp.json` when no MCP config exists yet, plus `.cursor/mcp.json.example` for reference.
+
 **Minimal MCP config** (no secrets required for read tools + preflight):
 
 ```json

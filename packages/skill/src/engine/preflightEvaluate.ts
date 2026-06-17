@@ -27,6 +27,34 @@ export interface EvaluateOptions {
   skipLlm?: boolean;
 }
 
+const DEFAULT_REPUTATION_TIMEOUT_MS = 500;
+
+async function readReputationTierWithTimeout(
+  services: PreflightServices,
+  agent: `0x${string}`,
+): Promise<{ tier: TrustCapitalTier; unavailable: boolean }> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      readReputation(services.clients, agent).then((rep) => ({
+        tier: rep.tier as TrustCapitalTier,
+        unavailable: false,
+      })),
+      new Promise<{ tier: TrustCapitalTier; unavailable: boolean }>((resolve) => {
+        timeout = setTimeout(
+          () => resolve({ tier: TrustCapitalTier.UNTRUSTED, unavailable: true }),
+          DEFAULT_REPUTATION_TIMEOUT_MS,
+        );
+      }),
+    ]);
+    return result;
+  } catch {
+    return { tier: TrustCapitalTier.UNTRUSTED, unavailable: true };
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
 /** Deterministic evaluation only — no attestation signing, no secrets required. */
 export async function runPreflightEvaluate(
   services: PreflightServices,
@@ -40,22 +68,28 @@ export async function runPreflightEvaluate(
   const intentHash = computeIntentHash(ctx.intent);
 
   const shapeViolations = validateIntentShape(ctx.intent);
-  let agentTier = TrustCapitalTier.BRONZE;
-  try {
-    const rep = await readReputation(services.clients, ctx.intent.agent);
-    agentTier = rep.tier as TrustCapitalTier;
-  } catch {
-    agentTier = TrustCapitalTier.UNTRUSTED;
+  const rep = await readReputationTierWithTimeout(services, ctx.intent.agent);
+  const agentTier = rep.tier;
+  if (rep.unavailable) {
+    shapeViolations.push({
+      code: "REPUTATION_UNAVAILABLE",
+      message:
+        "Trust Capital read timed out or failed; using conservative tier 0 for this preflight.",
+      severity: "warn",
+    });
   }
 
   const rules = evaluateRules(ctx, agentTier);
   const allViolations = [...shapeViolations, ...rules.violations];
   let verdict = mergeVerdicts(rules.verdict);
+  if (allViolations.some((v) => v.severity === "warn") && verdict === Verdict.ALLOW) {
+    verdict = Verdict.WARN;
+  }
 
   const simulation = await simulateIntent(services.clients, ctx.intent);
   if (ctx.covenant.requiredChecks.includes("simulation") && !simulation.success) {
     allViolations.push({
-      code: "SIMULATION_REVERT",
+      code: simulation.rpcUnavailable ? "RPC_UNAVAILABLE" : "SIMULATION_REVERT",
       message: simulation.revertReason ?? "eth_call simulation reverted",
       severity: "deny",
     });

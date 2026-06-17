@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-06-17T03:19:03.703Z",
+  "timestamp": "2026-06-17T15:08:50.860Z",
   "bin": "D:\\route\\COVENANT\\packages\\mcp\\dist\\cli.js",
-  "rpc": "https://atlantic-rpc.pharosnetwork.xyz",
+  "rpc": "https://atlantic.dplabs-internal.com",
   "results": {
-    "startup": 396,
-    "covenant_health": 2,
-    "covenant_reputation": 1517,
-    "covenant_simulate": 1466,
-    "covenant_preflight": 1965
+    "startup": 379,
+    "covenant_health": 6,
+    "covenant_reputation": 1302,
+    "covenant_simulate": 372,
+    "covenant_preflight": 1577
   },
   "targets": {
     "startup": 500,

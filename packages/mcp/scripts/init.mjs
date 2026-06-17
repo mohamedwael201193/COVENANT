@@ -8,7 +8,7 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cwd = process.cwd();
 const envPath = resolve(cwd, ".env.covenant");
 const example = `# COVENANT MCP — optional overrides (zero secrets required for read/evaluate tools)
-# PHAROS_RPC_URL=https://atlantic-rpc.pharosnetwork.xyz
+# PHAROS_RPC_URL=https://atlantic.dplabs-internal.com
 # COVENANT_API_URL=https://covenant-skill.onrender.com
 PREFLIGHT_LLM_ENABLED=false
 `;
@@ -40,8 +40,15 @@ const mcpJson = existsSync(cursorTemplate)
       2,
     ) + "\n";
 
-const cursorPath = resolve(cursorDir, "mcp.json.example");
-writeFileSync(cursorPath, mcpJson, "utf8");
-console.log("Wrote", cursorPath);
-console.log("\nZero-secret setup: copy mcp.json.example → mcp.json and restart your MCP client.");
+const cursorExamplePath = resolve(cursorDir, "mcp.json.example");
+const cursorPath = resolve(cursorDir, "mcp.json");
+writeFileSync(cursorExamplePath, mcpJson, "utf8");
+console.log("Wrote", cursorExamplePath);
+if (!existsSync(cursorPath)) {
+  writeFileSync(cursorPath, mcpJson, "utf8");
+  console.log("Created", cursorPath);
+} else {
+  console.log("Exists", cursorPath, "— leaving your MCP config unchanged");
+}
+console.log("\nZero-secret setup complete. Restart your MCP client to load Covenant.");
 console.log("Verify: npx covenant-mcp  (stdio server — Ctrl+C to exit)");

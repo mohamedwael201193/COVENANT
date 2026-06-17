@@ -114,6 +114,7 @@ export interface SimulationResult {
   gasEstimate?: bigint;
   revertReason?: string;
   traceAvailable: boolean;
+  rpcUnavailable?: boolean;
 }
 
 export interface RiskSignal {

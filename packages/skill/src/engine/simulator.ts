@@ -31,6 +31,20 @@ export interface RpcCapabilities {
 
 const PROBE_CALL: Hex = "0x";
 
+function normalizeRpcError(error: unknown): { message: string; rpcUnavailable: boolean } {
+  const raw = error instanceof Error ? error.message : String(error);
+  const rpcUnavailable =
+    /fetch failed|ENOTFOUND|ECONNRESET|ETIMEDOUT|timeout|rate limit|cu limit exceeded/i.test(raw);
+  if (rpcUnavailable) {
+    return {
+      rpcUnavailable: true,
+      message:
+        "Pharos RPC unavailable or rate-limited. Retry shortly or set PHAROS_RPC_URL to another Atlantic RPC endpoint.",
+    };
+  }
+  return { rpcUnavailable: false, message: raw };
+}
+
 export async function probeRpcCapabilities(
   client: PublicClient,
 ): Promise<RpcCapabilities> {
@@ -75,51 +89,66 @@ export async function simulateIntent(
   clients: ChainClients,
   intent: Intent,
   from?: `0x${string}`,
+  options: { estimateGas?: boolean } = {},
 ): Promise<SimulationResult> {
+  const estimateGasEnabled = options.estimateGas ?? false;
   const account = from ?? intent.agent;
   let returnData: Hex | undefined;
   let gasEstimate: bigint | undefined;
   let revertReason: string | undefined;
   let success = false;
   let traceAvailable = false;
+  let rpcUnavailable = false;
 
-  try {
-    const result = await clients.publicClient.call({
+  const callPromise = clients.publicClient.call({
       account,
       to: intent.target,
       data: intent.data,
       value: intent.value,
-    });
-    returnData = result.data ?? "0x";
+  });
+  const gasPromise = estimateGasEnabled
+    ? clients.publicClient.estimateGas({
+        account,
+        to: intent.target,
+        data: intent.data,
+        value: intent.value,
+      })
+    : Promise.resolve(undefined);
+
+  const [callResult, gasResult] = await Promise.allSettled([callPromise, gasPromise]);
+
+  if (callResult.status === "fulfilled") {
+    returnData = callResult.value.data ?? "0x";
     success = true;
-  } catch (error) {
+  } else {
     success = false;
-    revertReason = error instanceof Error ? error.message : String(error);
+    const normalized = normalizeRpcError(callResult.reason);
+    revertReason = normalized.message;
+    rpcUnavailable = normalized.rpcUnavailable;
   }
 
-  try {
-    gasEstimate = await clients.publicClient.estimateGas({
-      account,
-      to: intent.target,
-      data: intent.data,
-      value: intent.value,
-    });
-  } catch (error) {
+  if (gasResult.status === "fulfilled") {
+    gasEstimate = gasResult.value;
+  } else {
     if (!revertReason) {
-      revertReason = error instanceof Error ? error.message : String(error);
+      const normalized = normalizeRpcError(gasResult.reason);
+      revertReason = normalized.message;
+      rpcUnavailable = normalized.rpcUnavailable;
     }
   }
 
-  traceAvailable = await tryDebugTraceCall(clients.publicClient, [
-    {
-      from: account,
-      to: intent.target,
-      data: intent.data,
-      value: `0x${intent.value.toString(16)}`,
-    },
-    "latest",
-    { tracer: "callTracer" },
-  ]);
+  if (!rpcUnavailable && process.env.COVENANT_DEBUG_TRACE_ENABLED === "true") {
+    traceAvailable = await tryDebugTraceCall(clients.publicClient, [
+      {
+        from: account,
+        to: intent.target,
+        data: intent.data,
+        value: `0x${intent.value.toString(16)}`,
+      },
+      "latest",
+      { tracer: "callTracer" },
+    ]);
+  }
 
   return {
     success,
@@ -127,5 +156,6 @@ export async function simulateIntent(
     gasEstimate,
     revertReason,
     traceAvailable,
+    rpcUnavailable,
   };
 }

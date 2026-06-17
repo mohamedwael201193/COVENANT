@@ -162,7 +162,7 @@ curl https://covenant-skill.onrender.com/api/reputation/0xf76e6B0920e9332fF4410f
 Covenant is deployed on Pharos Atlantic testnet (`688689`) and uses live RPC reads by default.
 
 ```text
-RPC: https://atlantic-rpc.pharosnetwork.xyz
+RPC: https://atlantic.dplabs-internal.com
 Explorer: https://atlantic.pharosscan.xyz
 ```
 
@@ -185,6 +185,8 @@ Then ask your agent:
 ```text
 Use Covenant and call covenant_health.
 ```
+
+`init` creates `.env.covenant`, `.cursor/mcp.json.example`, and `.cursor/mcp.json` when no MCP config exists yet.
 
 ## 8. Cursor Setup
 
@@ -383,6 +385,11 @@ covenant_verify_counterparty -> covenant_preflight
 Prompt library:
 
 ```text
+docs/prompts/INSTALL_AGENT.md
+docs/prompts/WALLET_SETUP.md
+docs/prompts/SEND_TRANSACTION.md
+docs/prompts/RISK_REVIEW.md
+docs/prompts/COUNTERPARTY_CHECK.md
 docs/prompts/agent-risk-review.md
 docs/prompts/agent-send-money.md
 docs/prompts/agent-preflight.md

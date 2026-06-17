@@ -138,7 +138,7 @@ function getContextForTool(name: ToolName): McpContext {
 
 export function createMcpServer(log: Logger): Server {
   const server = new Server(
-    { name: "covenant", version: "0.2.4" },
+    { name: "covenant", version: "0.2.6" },
     {
       capabilities: { tools: {} },
       instructions: MCP_SERVER_INSTRUCTIONS,
@@ -187,11 +187,6 @@ export function createMcpServer(log: Logger): Server {
 }
 
 export async function runMcpStdio(log: Logger): Promise<void> {
-  try {
-    cachedPublicCtx = buildPublicContext(loadMcpConfig());
-  } catch (err) {
-    log.warn({ err }, "MCP public context warm-up deferred to first tool call");
-  }
   const server = createMcpServer(log);
   const transport = new StdioServerTransport();
   await server.connect(transport);

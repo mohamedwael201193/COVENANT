@@ -15,7 +15,7 @@ Creates `.env.covenant` and `.cursor/mcp.json.example`.
 Edit `.env.covenant`:
 
 ```env
-PHAROS_RPC_URL=https://atlantic-rpc.pharosnetwork.xyz
+PHAROS_RPC_URL=https://atlantic.dplabs-internal.com
 GOPLUS_APP_KEY=your_key
 GOPLUS_APP_SECRET=your_secret
 DEPLOYER_PRIVATE_KEY=0x...   # GuardedExecutor attester
@@ -36,7 +36,7 @@ Pharos faucet: Pharos Atlantic testnet docs
       "command": "npx",
       "args": ["-y", "covenant-mcp"],
       "env": {
-        "PHAROS_RPC_URL": "https://atlantic-rpc.pharosnetwork.xyz",
+        "PHAROS_RPC_URL": "https://atlantic.dplabs-internal.com",
         "GOPLUS_APP_KEY": "...",
         "GOPLUS_APP_SECRET": "...",
         "DEPLOYER_PRIVATE_KEY": "0x...",

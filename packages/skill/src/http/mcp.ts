@@ -32,7 +32,7 @@ async function handleJsonRpc(req: JsonRpcRequest, ctx: McpHttpContext) {
       return jsonRpcResult(req.id, {
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: { name: "covenant", version: "0.2.4" },
+        serverInfo: { name: "covenant", version: "0.2.6" },
         instructions: MCP_SERVER_INSTRUCTIONS,
       });
 

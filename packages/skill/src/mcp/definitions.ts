@@ -33,6 +33,11 @@ export const MCP_SERVER_INSTRUCTIONS = `COVENANT — Stripe + OAuth for AI Agent
 ZERO-SETUP tools (no private keys, no API secrets):
 covenant_health, covenant_reputation, covenant_simulate, covenant_preflight
 
+For "Should I send tokens to X?", use this order:
+covenant_health → covenant_reputation → covenant_verify_counterparty → covenant_simulate → covenant_preflight.
+If preflight returns ALLOW, use covenant_sign_attestation → covenant_request_approval and give the user the approvalUrl.
+Never ask the user for a private key or seed phrase.
+
 Wallet flow (no keys in agent):
 1. covenant_connect_wallet → SIWE message + connectUrl
 2. covenant_create_session → sessionId with permissions
@@ -48,7 +53,7 @@ export const toolDefinitions = [
   {
     name: "covenant_health",
     description:
-      "Check COVENANT skill connectivity, RPC probes, and attester balance. Use FIRST when debugging MCP setup or before a demo. Do NOT use for policy decisions — use covenant_preflight instead.",
+      "Fast zero-RPC readiness check for the COVENANT MCP server. Use FIRST after install or before a demo. This confirms the skill loaded; use covenant_reputation or covenant_simulate for live Pharos RPC reads. Do NOT use for policy decisions — use covenant_preflight instead.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -107,12 +112,17 @@ export const toolDefinitions = [
   {
     name: "covenant_simulate",
     description:
-      "Simulate an intent via eth_call + eth_estimateGas without signing. Use to debug calldata or estimate gas BEFORE covenant_preflight. Do NOT use as authorization — simulation success does not mean ALLOW.",
+      "Simulate an intent via eth_call without signing. Fast by default; set includeGasEstimate=true only when gas is needed. Use BEFORE covenant_preflight to debug calldata. Do NOT use as authorization — simulation success does not mean ALLOW.",
     inputSchema: {
       type: "object",
       properties: {
         intent: INTENT,
         from: { ...ADDRESS, description: "Optional msg.sender override for simulation" },
+        includeGasEstimate: {
+          type: "boolean",
+          default: false,
+          description: "Set true to also call eth_estimateGas. Slower; not required for preflight.",
+        },
       },
       required: ["intent"],
     },

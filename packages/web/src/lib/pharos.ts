@@ -2,7 +2,7 @@
 export const PHAROS_CHAIN_ID = 688689;
 export const PHAROS_CHAIN_ID_HEX = "0xa81a1" as const;
 
-export const PHAROS_RPC = "https://atlantic-rpc.pharosnetwork.xyz";
+export const PHAROS_RPC = "https://atlantic.dplabs-internal.com";
 
 export const CONTRACTS = {
   guardedExecutor: "0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F" as const,

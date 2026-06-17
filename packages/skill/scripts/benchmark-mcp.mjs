@@ -11,7 +11,7 @@ const root = resolve(import.meta.dirname, "../../..");
 
 const env = {
   ...process.env,
-  PHAROS_RPC_URL: process.env.BENCHMARK_RPC_URL ?? "https://atlantic-rpc.pharosnetwork.xyz",
+  PHAROS_RPC_URL: process.env.BENCHMARK_RPC_URL ?? "https://atlantic.dplabs-internal.com",
   PREFLIGHT_LLM_ENABLED: "false",
   LOG_LEVEL: "error",
 };
