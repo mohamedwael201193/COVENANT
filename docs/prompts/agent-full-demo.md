@@ -1,7 +1,5 @@
 # Moved
 
-Use the production end-to-end prompt:
+**Canonical end-to-end prompt:**
 
-**[agent-end-to-end.md](./agent-end-to-end.md)**
-
-Developer docs: [README.md](../../README.md#agent-installation-prompts)
+**[03-end-to-end-workflow.md](./03-end-to-end-workflow.md)**

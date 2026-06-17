@@ -1,5 +1,1 @@
-# Moved
-
-This prompt was renamed. Use:
-
-**[agent-wallet-authorization.md](./agent-wallet-authorization.md)**
+# Moved → [03-end-to-end-workflow.md](./03-end-to-end-workflow.md)

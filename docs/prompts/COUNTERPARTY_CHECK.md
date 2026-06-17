@@ -1,5 +1,1 @@
-# Moved
-
-This prompt was renamed. Use:
-
-**[agent-counterparty-check.md](./agent-counterparty-check.md)**
+# Moved → [02-validate-skills.md](./02-validate-skills.md)

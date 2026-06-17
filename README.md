@@ -83,13 +83,29 @@ Extended setup: [docs/skill/INSTALL.md](docs/skill/INSTALL.md) · Client configs
 
 ---
 
+## Recommended Demo Flow
+
+**Official workflow** for new users, judges, demo videos, and hackathon reviewers.
+
+Open GitHub → copy prompt → paste into Cursor → watch it work.
+
+| Step | Prompt | What happens |
+|---|---|---|
+| **1** | [docs/prompts/01-install-covenant.md](docs/prompts/01-install-covenant.md) | `npx -y covenant-mcp init` → restart → 17 tools + `covenant_health` |
+| **2** | [docs/prompts/02-validate-skills.md](docs/prompts/02-validate-skills.md) | Run 5 core tools → Skill / Trust / Risk summaries |
+| **3** | [docs/prompts/03-end-to-end-workflow.md](docs/prompts/03-end-to-end-workflow.md) | Wallet → approval → txHash → receipt |
+
+No debugging. No scripts. MCP tools only.
+
+---
+
 ## 30-Second Quick Start
 
 | Step | Action |
 |---|---|
-| 1 | `npx -y covenant-mcp init` |
-| 2 | Restart MCP client (Cursor, Claude, OpenAI Agents, Antigravity) |
-| 3 | Paste [docs/prompts/agent-install.md](docs/prompts/agent-install.md) |
+| 1 | Paste [01-install-covenant.md](docs/prompts/01-install-covenant.md) |
+| 2 | Restart Cursor when prompted |
+| 3 | Paste [02-validate-skills.md](docs/prompts/02-validate-skills.md) |
 
 **Expected:**
 
@@ -279,22 +295,19 @@ Replace SVG placeholders with captures — see [assets/README.md](assets/README.
 
 ## Agent Installation Prompts
 
-Any MCP-compatible agent can use COVENANT — **Cursor**, **Claude Desktop**, **Claude Code**, **OpenAI Agents SDK**, **Antigravity**, and future Pharos Agents.
+**Canonical demo prompts** (use these):
 
-Copy-paste into a fresh chat:
-
-| Task | Prompt |
+| Step | Prompt |
 |---|---|
-| Install COVENANT | [agent-install.md](docs/prompts/agent-install.md) |
-| Validate setup | [agent-bootstrap.md](docs/prompts/agent-bootstrap.md) |
-| Health check | [agent-health-check.md](docs/prompts/agent-health-check.md) |
-| Reputation review | [agent-reputation-review.md](docs/prompts/agent-reputation-review.md) |
-| Risk review | [agent-risk-review.md](docs/prompts/agent-risk-review.md) |
-| Connect wallet | [agent-wallet-authorization.md](docs/prompts/agent-wallet-authorization.md) |
-| Request approval | [agent-request-approval.md](docs/prompts/agent-request-approval.md) |
-| Full workflow | [agent-end-to-end.md](docs/prompts/agent-end-to-end.md) |
+| 1 — Install | [01-install-covenant.md](docs/prompts/01-install-covenant.md) |
+| 2 — Validate skills | [02-validate-skills.md](docs/prompts/02-validate-skills.md) |
+| 3 — End-to-end | [03-end-to-end-workflow.md](docs/prompts/03-end-to-end-workflow.md) |
+
+Works in **Cursor**, **Claude Desktop**, **Claude Code**, **OpenAI Agents**, **Antigravity**, and future Pharos Agents.
 
 Placeholders: `<YOUR_WALLET_ADDRESS>` · `<YOUR_AGENT_ADDRESS>` · `<TARGET_ADDRESS>`
+
+Legacy prompts redirect to the canonical three above.
 
 ---
 

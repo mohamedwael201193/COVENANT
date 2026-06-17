@@ -6,30 +6,20 @@
 
 | Goal | Document |
 |---|---|
+| **Demo flow (start here)** | [01-install](./prompts/01-install-covenant.md) → [02-validate](./prompts/02-validate-skills.md) → [03-end-to-end](./prompts/03-end-to-end-workflow.md) |
 | Install COVENANT | [README § Installation](../README.md#installation) |
-| Configure MCP client | [README § MCP Configuration](../README.md#mcp-configuration) |
-| Understand wallet flow | [README § Wallet Authorization](../README.md#wallet-authorization-flow) |
 | See all 17 tools | [MCP_REFERENCE.md](./MCP_REFERENCE.md) |
-| Copy-paste agent prompts | [prompts/](./prompts/) |
-| Run workflow examples | [skill/EXAMPLES.md](./skill/EXAMPLES.md) |
-| Fix an error | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) |
-| Deploy / operate | [DEPLOYMENT.md](./DEPLOYMENT.md) |
 | Verify hackathon proof | [JUDGE_QUICK_START.md](./JUDGE_QUICK_START.md) |
 
-## Agent prompts (production)
+## Canonical prompts
 
-| Prompt | Purpose |
-|---|---|
-| [agent-install.md](./prompts/agent-install.md) | Install MCP |
-| [agent-bootstrap.md](./prompts/agent-bootstrap.md) | Validate installation |
-| [agent-health-check.md](./prompts/agent-health-check.md) | Smoke test |
-| [agent-reputation-review.md](./prompts/agent-reputation-review.md) | Trust Capital |
-| [agent-risk-review.md](./prompts/agent-risk-review.md) | Preflight workflow |
-| [agent-wallet-authorization.md](./prompts/agent-wallet-authorization.md) | SIWE session |
-| [agent-request-approval.md](./prompts/agent-request-approval.md) | Approval URL |
-| [agent-end-to-end.md](./prompts/agent-end-to-end.md) | Full workflow |
-| [agent-send-money.md](./prompts/agent-send-money.md) | Send PHRS |
-| [agent-counterparty-check.md](./prompts/agent-counterparty-check.md) | Recipient risk |
+| # | Prompt | Purpose |
+|---|---|---|
+| **01** | [01-install-covenant.md](./prompts/01-install-covenant.md) | Install + 17 tools + health |
+| **02** | [02-validate-skills.md](./prompts/02-validate-skills.md) | 5-tool skill demonstration |
+| **03** | [03-end-to-end-workflow.md](./prompts/03-end-to-end-workflow.md) | Wallet → receipt |
+
+Legacy `agent-*.md` files redirect to the canonical three.
 
 ## Reference
 

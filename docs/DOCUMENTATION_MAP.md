@@ -34,18 +34,10 @@ README.md                          ← Product overview, install, tools, workflo
 │   │   ├── README.md
 │   │   └── PROOF_OF_EXECUTION.md  ← On-chain proof (demo addresses)
 │   ├── prompts/                   ← Copy-paste agent prompts (canonical)
-│   │   ├── agent-install.md
-│   │   ├── agent-bootstrap.md
-│   │   ├── agent-health-check.md
-│   │   ├── agent-reputation-review.md
-│   │   ├── agent-risk-review.md
-│   │   ├── agent-wallet-authorization.md
-│   │   ├── agent-request-approval.md
-│   │   ├── agent-end-to-end.md
-│   │   ├── agent-send-money.md
-│   │   ├── agent-counterparty-check.md
-│   │   ├── judge-demo.md          ← Judges only
-│   │   └── video-demo.md          ← Recording only
+│   │   ├── 01-install-covenant.md   ← Install + health
+│   │   ├── 02-validate-skills.md    ← 5-tool demo
+│   │   ├── 03-end-to-end-workflow.md ← Wallet → receipt
+│   │   └── agent-*.md               ← Redirects to 01/02/03
 │   ├── skill/
 │   │   ├── INSTALL.md             ← Extended install + secrets
 │   │   ├── EXAMPLES.md            ← Workflow examples (canonical)
@@ -62,13 +54,9 @@ README.md                          ← Product overview, install, tools, workflo
 
 | Canonical | Redirects to canonical |
 |---|---|
-| `docs/prompts/agent-install.md` | `INSTALL_AGENT.md` |
-| `docs/prompts/agent-bootstrap.md` | — |
-| `docs/prompts/agent-risk-review.md` | `RISK_REVIEW.md`, `agent-preflight.md`, `agent-covenant-audit.md` |
-| `docs/prompts/agent-wallet-authorization.md` | `WALLET_SETUP.md`, `agent-wallet-review.md` |
-| `docs/prompts/agent-send-money.md` | `SEND_TRANSACTION.md` |
-| `docs/prompts/agent-counterparty-check.md` | `COUNTERPARTY_CHECK.md` |
-| `docs/prompts/agent-end-to-end.md` | `agent-full-demo.md` |
+| `docs/prompts/01-install-covenant.md` | `agent-install.md`, `INSTALL_AGENT.md`, `agent-bootstrap.md` (partial) |
+| `docs/prompts/02-validate-skills.md` | `agent-bootstrap.md`, `agent-health-check.md`, `agent-reputation-review.md`, `agent-risk-review.md`, `agent-counterparty-check.md`, `judge-demo.md`, `RISK_REVIEW.md`, `COUNTERPARTY_CHECK.md`, `agent-preflight.md`, `agent-covenant-audit.md` |
+| `docs/prompts/03-end-to-end-workflow.md` | `agent-end-to-end.md`, `video-demo.md`, `agent-full-demo.md`, `agent-wallet-authorization.md`, `agent-request-approval.md`, `agent-send-money.md`, `WALLET_SETUP.md`, `SEND_TRANSACTION.md`, `agent-wallet-review.md` |
 | `docs/proofs/PROOF_OF_EXECUTION.md` | `docs/PROOF_OF_EXECUTION.md` |
 | `README.md` (install) | `docs/skill/INSTALL.md` (extended only) |
 

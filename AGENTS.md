@@ -1,26 +1,15 @@
 # COVENANT Agent Skill
 
-**Reusable Pharos Skill** — trust and authorization layer for AI agents on Pharos Atlantic.
+**Reusable Pharos Skill** — trust and authorization for AI agents on Pharos Atlantic.
 
-Install: `npx -y covenant-mcp init` → restart MCP client.
+## Demo flow (canonical)
 
-## When to use
-
-Call COVENANT **before** any Pharos Agent executes on-chain actions. COVENANT secures other Skills — it does not replace them.
-
-## Sequence
-
-```text
-covenant_reputation → covenant_preflight → covenant_sign_attestation
-→ covenant_connect_wallet → covenant_request_approval → covenant_get_receipt
-```
-
-## Prompts
-
-| Task | File |
+| Step | Prompt |
 |---|---|
-| Install | [docs/prompts/agent-install.md](docs/prompts/agent-install.md) |
-| Validate | [docs/prompts/agent-bootstrap.md](docs/prompts/agent-bootstrap.md) |
-| End-to-end | [docs/prompts/agent-end-to-end.md](docs/prompts/agent-end-to-end.md) |
+| 1 | [docs/prompts/01-install-covenant.md](docs/prompts/01-install-covenant.md) |
+| 2 | [docs/prompts/02-validate-skills.md](docs/prompts/02-validate-skills.md) |
+| 3 | [docs/prompts/03-end-to-end-workflow.md](docs/prompts/03-end-to-end-workflow.md) |
+
+Install: `npx -y covenant-mcp init` → restart MCP → paste prompt 01.
 
 17 tools · [docs/MCP_REFERENCE.md](docs/MCP_REFERENCE.md) · [README.md](README.md)
