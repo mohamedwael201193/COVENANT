@@ -11,7 +11,25 @@ export interface CovenantSession {
   revoked: boolean;
 }
 
-export type ApprovalStatus = "pending" | "approved" | "rejected" | "expired";
+export type ApprovalStatus = "pending" | "approved" | "executed" | "rejected" | "expired";
+
+export interface ExecutionPayload {
+  intent: {
+    agent: string;
+    target: string;
+    data: string;
+    value: string;
+    nonce: string;
+  };
+  covenantHash: string;
+  attestation?: {
+    deadline: string;
+    v: number;
+    r: string;
+    s: string;
+  };
+  preflightRequest?: Record<string, unknown>;
+}
 
 export interface ApprovalRequest {
   id: string;
@@ -20,8 +38,11 @@ export interface ApprovalRequest {
   intentHash: string;
   verdict: string;
   preflightSummary: Record<string, unknown>;
+  executionPayload?: ExecutionPayload;
   status: ApprovalStatus;
   approvalUrl: string;
+  txHash?: string;
+  decisionId?: string;
   expiresAt: number;
   createdAt: number;
 }

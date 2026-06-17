@@ -108,6 +108,49 @@ model IndexerState {
   @@map("indexer_state")
 }
 
+model SiweNonce {
+  walletAddress String   @id @map("wallet_address") @db.VarChar(42)
+  nonce         String   @db.VarChar(64)
+  message       String
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("siwe_nonces")
+}
+
+model AgentSession {
+  id            String            @id
+  walletAddress String            @map("wallet_address") @db.VarChar(42)
+  agentAddress  String?           @map("agent_address") @db.VarChar(42)
+  permissions   Json
+  maxSpendWei   String?           @map("max_spend_wei")
+  expiresAt     DateTime          @map("expires_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  revoked       Boolean           @default(false)
+  approvals     ApprovalRequest[]
+
+  @@map("agent_sessions")
+}
+
+model ApprovalRequest {
+  id               String       @id
+  sessionId        String       @map("session_id")
+  walletAddress    String       @map("wallet_address") @db.VarChar(42)
+  intentHash       String       @map("intent_hash") @db.VarChar(66)
+  verdict          String       @db.VarChar(8)
+  preflightSummary Json         @map("preflight_summary")
+  executionPayload Json?        @map("execution_payload")
+  status           String       @default("pending") @db.VarChar(16)
+  txHash           String?      @map("tx_hash") @db.VarChar(66)
+  decisionId       String?      @map("decision_id")
+  expiresAt        DateTime     @map("expires_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  session          AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("approval_requests")
+}
+
 model ProcessedLog {
   txHash   String @map("tx_hash") @db.VarChar(66)
   logIndex Int    @map("log_index")

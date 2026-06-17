@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { privateKeyToAccount } from "viem/accounts";
 import { toolDefinitions, toolAliases, resolveToolName, dispatchTool } from "../src/tools/index.js";
 import { registerIdentitySchema, preflightRequestSchema } from "../src/engine/schema.js";
@@ -26,6 +26,11 @@ const EXPECTED_TOOLS = [
 ];
 
 describe("MCP tool surface", () => {
+  beforeEach(() => {
+    process.env.COVENANT_SESSION_STORE = "memory";
+    clearSessionStore();
+  });
+
   it("exports 17 covenant_* tools with JSON schemas", () => {
     expect(toolDefinitions).toHaveLength(17);
     const names = toolDefinitions.map((t) => t.name).sort();
@@ -43,7 +48,6 @@ describe("MCP tool surface", () => {
   });
 
   it("session flow without private keys", async () => {
-    clearSessionStore();
     const account = privateKeyToAccount(
       "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
     );

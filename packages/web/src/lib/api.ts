@@ -1,5 +1,5 @@
 const HEALTH_BASE = import.meta.env.VITE_HEALTH_URL ?? "";
-const API_BASE =
+export const API_BASE =
   import.meta.env.VITE_API_URL ?? (HEALTH_BASE ? `${HEALTH_BASE.replace(/\/$/, "")}/api` : "/api");
 
 export const apiConfig = { apiBase: API_BASE, healthBase: HEALTH_BASE || undefined };

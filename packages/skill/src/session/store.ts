@@ -1,145 +1,85 @@
-import { randomBytes } from "node:crypto";
 import type { ApprovalRequest, CovenantSession, SiweChallenge } from "./types.js";
+import * as memory from "./memoryStore.js";
+import * as pg from "./pgStore.js";
 
-const sessions = new Map<string, CovenantSession>();
-const approvals = new Map<string, ApprovalRequest>();
-const siweNonces = new Map<string, { nonce: string; expiresAt: number }>();
-
-function id(prefix: string): string {
-  return `${prefix}_${randomBytes(12).toString("hex")}`;
+function usePostgres(): boolean {
+  if (process.env.COVENANT_SESSION_STORE === "memory") return false;
+  return Boolean(process.env.DATABASE_URL);
 }
 
-export function getDashboardBase(): string {
-  return (
-    process.env.COVENANT_DASHBOARD_URL?.replace(/\/$/, "") ??
-    "https://covenant-web-mu.vercel.app"
-  );
+export { getDashboardBase } from "./siwe.js";
+
+export async function createSiweChallenge(walletAddress: `0x${string}`): Promise<SiweChallenge> {
+  return usePostgres()
+    ? pg.createSiweChallengePg(walletAddress)
+    : memory.createSiweChallengeMemory(walletAddress);
 }
 
-export function createSiweChallenge(walletAddress: `0x${string}`): SiweChallenge {
-  const nonce = randomBytes(16).toString("hex");
-  const expiresAt = Date.now() + 10 * 60 * 1000;
-  siweNonces.set(walletAddress.toLowerCase(), { nonce, expiresAt });
-
-  const domain = "covenant.pharos";
-  const uri = getDashboardBase();
-  const issuedAt = new Date().toISOString();
-  const message = `${domain} wants you to sign in with your Ethereum account:
-${walletAddress}
-
-Sign in to COVENANT agent session. No transaction will be sent.
-
-URI: ${uri}
-Version: 1
-Chain ID: 688689
-Nonce: ${nonce}
-Issued At: ${issuedAt}`;
-
-  return {
-    nonce,
-    message,
-    connectUrl: `${uri}/connect?address=${walletAddress}&nonce=${nonce}`,
-    expiresAt,
-  };
+export async function getSiweChallenge(
+  walletAddress: string,
+  nonce: string,
+): Promise<{ message: string; expiresAt: number } | undefined> {
+  return usePostgres()
+    ? pg.getSiweChallengePg(walletAddress, nonce)
+    : memory.getSiweChallengeMemory(walletAddress, nonce);
 }
 
-export function verifySiweNonce(walletAddress: string, nonce: string): boolean {
-  const entry = siweNonces.get(walletAddress.toLowerCase());
-  if (!entry || entry.nonce !== nonce || entry.expiresAt < Date.now()) {
-    return false;
-  }
-  siweNonces.delete(walletAddress.toLowerCase());
-  return true;
+export async function verifySiweNonce(walletAddress: string, nonce: string): Promise<boolean> {
+  return usePostgres()
+    ? pg.verifySiweNoncePg(walletAddress, nonce)
+    : memory.verifySiweNonceMemory(walletAddress, nonce);
 }
 
-export function createSession(input: {
+export async function createSession(input: {
   walletAddress: `0x${string}`;
   agentAddress?: `0x${string}`;
   permissions: CovenantSession["permissions"];
   maxSpendWei?: string;
   durationDays: number;
-}): CovenantSession {
-  const session: CovenantSession = {
-    id: id("sess"),
-    walletAddress: input.walletAddress,
-    agentAddress: input.agentAddress,
-    permissions: input.permissions,
-    maxSpendWei: input.maxSpendWei,
-    expiresAt: Date.now() + input.durationDays * 24 * 60 * 60 * 1000,
-    createdAt: Date.now(),
-    revoked: false,
-  };
-  sessions.set(session.id, session);
-  return session;
+}): Promise<CovenantSession> {
+  return usePostgres() ? pg.createSessionPg(input) : memory.createSessionMemory(input);
 }
 
-export function getSession(sessionId: string): CovenantSession | undefined {
-  const s = sessions.get(sessionId);
-  if (!s || s.revoked || s.expiresAt < Date.now()) {
-    return undefined;
-  }
-  return s;
+export async function getSession(sessionId: string): Promise<CovenantSession | undefined> {
+  return usePostgres() ? pg.getSessionPg(sessionId) : memory.getSessionMemory(sessionId);
 }
 
-export function revokeSession(sessionId: string): boolean {
-  const s = sessions.get(sessionId);
-  if (!s) return false;
-  s.revoked = true;
-  return true;
+export async function revokeSession(sessionId: string): Promise<boolean> {
+  return usePostgres() ? pg.revokeSessionPg(sessionId) : memory.revokeSessionMemory(sessionId);
 }
 
-export function createApproval(input: {
+export async function createApproval(input: {
   sessionId: string;
   walletAddress: `0x${string}`;
   intentHash: string;
   verdict: string;
   preflightSummary: Record<string, unknown>;
-}): ApprovalRequest {
-  const approvalId = id("appr");
-  const approval: ApprovalRequest = {
-    id: approvalId,
-    sessionId: input.sessionId,
-    walletAddress: input.walletAddress,
-    intentHash: input.intentHash,
-    verdict: input.verdict,
-    preflightSummary: input.preflightSummary,
-    status: "pending",
-    approvalUrl: `${getDashboardBase()}/approve/${approvalId}`,
-    expiresAt: Date.now() + 30 * 60 * 1000,
-    createdAt: Date.now(),
-  };
-  approvals.set(approvalId, approval);
-  return approval;
+  executionPayload?: Record<string, unknown>;
+}): Promise<ApprovalRequest> {
+  return usePostgres() ? pg.createApprovalPg(input) : memory.createApprovalMemory(input);
 }
 
-export function getApproval(id: string): ApprovalRequest | undefined {
-  const a = approvals.get(id);
-  if (!a) return undefined;
-  if (a.status === "pending" && a.expiresAt < Date.now()) {
-    a.status = "expired";
-  }
-  return a;
+export async function getApproval(id: string): Promise<ApprovalRequest | undefined> {
+  return usePostgres() ? pg.getApprovalPg(id) : memory.getApprovalMemory(id);
 }
 
-export function listPendingApprovals(sessionId: string): ApprovalRequest[] {
-  return [...approvals.values()].filter(
-    (a) => a.sessionId === sessionId && a.status === "pending" && a.expiresAt >= Date.now(),
-  );
+export async function listPendingApprovals(sessionId: string): Promise<ApprovalRequest[]> {
+  return usePostgres()
+    ? pg.listPendingApprovalsPg(sessionId)
+    : memory.listPendingApprovalsMemory(sessionId);
 }
 
-export function updateApprovalStatus(
+export async function updateApprovalStatus(
   id: string,
   status: ApprovalRequest["status"],
-): ApprovalRequest | undefined {
-  const a = approvals.get(id);
-  if (!a) return undefined;
-  a.status = status;
-  return a;
+  extra?: { txHash?: string; decisionId?: string },
+): Promise<ApprovalRequest | undefined> {
+  return usePostgres()
+    ? pg.updateApprovalPg(id, { status, ...extra })
+    : memory.updateApprovalMemory(id, { status, ...extra });
 }
 
 /** Test helper */
 export function clearSessionStore(): void {
-  sessions.clear();
-  approvals.clear();
-  siweNonces.clear();
+  memory.clearSessionStoreMemory();
 }

@@ -200,6 +200,24 @@ export const toolDefinitions = [
         intentHash: { type: "string", pattern: "^0x[a-fA-F0-9]{64}$" },
         verdict: { type: "string", enum: ["ALLOW", "WARN", "DENY"] },
         preflightSummary: { type: "object" },
+        executionPayload: {
+          type: "object",
+          description: "Required for UI execution: intent, covenantHash, attestation from covenant_sign_attestation, optional preflightRequest",
+          properties: {
+            intent: INTENT,
+            covenantHash: { type: "string", pattern: "^0x[a-fA-F0-9]{64}$" },
+            attestation: {
+              type: "object",
+              properties: {
+                deadline: { type: "string" },
+                v: { type: "integer" },
+                r: { type: "string" },
+                s: { type: "string" },
+              },
+            },
+            preflightRequest: { type: "object" },
+          },
+        },
       },
       required: ["sessionId", "intentHash", "verdict"],
     },

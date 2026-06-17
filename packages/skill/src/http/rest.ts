@@ -27,8 +27,11 @@ import { registerSseRoutes } from "./sse.js";
 import {
   handleConnectWallet,
   handleCreateSession,
+  handleCompleteApproval,
+  handleGetSiweChallenge,
+  handlePrepareApprovalExecution,
+  handleRequestApproval,
   getApproval,
-  updateApprovalStatus,
 } from "../session/handlers.js";
 
 export interface RestContext {
@@ -164,6 +167,20 @@ export function createRestApp(ctx: RestContext): Express {
     }
   });
 
+  app.get("/api/sessions/challenge", async (req, res) => {
+    const walletAddress = String(req.query.address ?? "");
+    const nonce = String(req.query.nonce ?? "");
+    if (!walletAddress || !nonce) {
+      res.status(400).json({ error: "address and nonce required" });
+      return;
+    }
+    try {
+      res.json(await handleGetSiweChallenge(walletAddress, nonce));
+    } catch (error) {
+      res.status(404).json({ error: error instanceof Error ? error.message : "not found" });
+    }
+  });
+
   app.post("/api/sessions", async (req, res) => {
     try {
       res.status(201).json(await handleCreateSession(req.body));
@@ -172,8 +189,49 @@ export function createRestApp(ctx: RestContext): Express {
     }
   });
 
+  app.get("/api/sessions/:sessionId", async (req, res) => {
+    const { getSession } = await import("../session/store.js");
+    const session = await getSession(req.params.sessionId);
+    if (!session) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    res.json({
+      sessionId: session.id,
+      walletAddress: session.walletAddress,
+      permissions: session.permissions,
+      expiresAt: new Date(session.expiresAt).toISOString(),
+    });
+  });
+
+  app.post("/api/sessions/:sessionId/revoke", async (req, res) => {
+    const { handleRevokeSession } = await import("../session/handlers.js");
+    try {
+      res.json(await handleRevokeSession({ sessionId: req.params.sessionId }));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "revoke failed" });
+    }
+  });
+
+  app.post("/api/approvals/request", async (req, res) => {
+    try {
+      res.status(201).json(await handleRequestApproval(req.body));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "request failed" });
+    }
+  });
+
+  app.get("/api/approvals/pending/:sessionId", async (req, res) => {
+    const { handleGetPendingApprovals } = await import("../session/handlers.js");
+    try {
+      res.json(await handleGetPendingApprovals({ sessionId: req.params.sessionId }));
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "list failed" });
+    }
+  });
+
   app.get("/api/approvals/:id", async (req, res) => {
-    const approval = getApproval(req.params.id);
+    const approval = await getApproval(req.params.id);
     if (!approval) {
       res.status(404).json({ error: "not found" });
       return;
@@ -181,13 +239,37 @@ export function createRestApp(ctx: RestContext): Express {
     res.json(approval);
   });
 
-  app.post("/api/approvals/:id/approve", async (req, res) => {
-    const approval = updateApprovalStatus(req.params.id, "approved");
+  app.get("/api/approvals/:id/status", async (req, res) => {
+    const approval = await getApproval(req.params.id);
     if (!approval) {
       res.status(404).json({ error: "not found" });
       return;
     }
-    res.json(approval);
+    res.json({
+      approvalId: approval.id,
+      status: approval.status,
+      txHash: approval.txHash,
+      decisionId: approval.decisionId,
+      approvalUrl: approval.approvalUrl,
+    });
+  });
+
+  app.get("/api/approvals/:id/execution", async (req, res) => {
+    try {
+      const prepared = await handlePrepareApprovalExecution(req.params.id, ctx.services);
+      res.json(prepared);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "prepare failed" });
+    }
+  });
+
+  app.post("/api/approvals/:id/complete", async (req, res) => {
+    try {
+      const updated = await handleCompleteApproval(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "complete failed" });
+    }
   });
 
   app.post("/api/preflight", async (req, res) => {
