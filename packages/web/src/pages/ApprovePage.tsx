@@ -1,9 +1,15 @@
 import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { API_BASE } from "@/lib/api";
 import { connectWallet } from "@/lib/wallet";
+import {
+  publishCovenantOnChain,
+  readAgentOnChainStatus,
+  registerAgentOnChain,
+  type AgentOnChainStatus,
+} from "@/lib/onchain-setup";
 import { CONTRACTS, DECISION_LOG_ABI, GUARDED_EXECUTOR_ABI } from "@/lib/pharos";
 import {
   createPublicClient,
@@ -30,6 +36,9 @@ interface ApprovalRecord {
     };
     covenantHash: string;
     attestation?: { deadline: string; v: number; r: string; s: string };
+    preflightRequest?: {
+      covenant?: { tierLimits?: { tier: number; maxValueWei: string }[] };
+    };
   };
   txHash?: string;
   decisionId?: string;
@@ -40,8 +49,13 @@ interface ExecutionPrep {
     intent: ApprovalRecord["executionPayload"] extends infer P ? P extends { intent: infer I } ? I : never : never;
     covenantHash: string;
     attestation: { deadline: string; v: number; r: string; s: string };
+    preflightRequest?: {
+      covenant?: { tierLimits?: { tier: number; maxValueWei: string }[] };
+    };
   };
 }
+
+const MAX_GAS = 2_000_000n;
 
 export function ApprovePage() {
   const { approvalId } = useParams<{ approvalId: string }>();
@@ -51,13 +65,21 @@ export function ApprovePage() {
   const [txHash, setTxHash] = useState("");
   const [decisionId, setDecisionId] = useState("");
   const [receipt, setReceipt] = useState<Record<string, unknown> | null>(null);
+  const [onChain, setOnChain] = useState<AgentOnChainStatus | null>(null);
+
+  const refreshOnChain = useCallback(async (record: ApprovalRecord) => {
+    const agent = (record.executionPayload?.intent.agent ?? record.walletAddress) as Hex;
+    const chainStatus = await readAgentOnChainStatus(agent, record.walletAddress as Hex);
+    setOnChain(chainStatus);
+    return chainStatus;
+  }, []);
 
   useEffect(() => {
     if (!approvalId) return;
     fetch(`${API_BASE}/approvals/${approvalId}`)
       .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error ?? "not found");
+        const data = (await r.json()) as ApprovalRecord;
+        if (!r.ok) throw new Error((data as { error?: string }).error ?? "not found");
         setApproval(data);
         if (data.status === "executed") {
           setStatus("executed");
@@ -65,13 +87,14 @@ export function ApprovePage() {
           setDecisionId(data.decisionId ?? "");
         } else {
           setStatus("ready");
+          await refreshOnChain(data);
         }
       })
       .catch((e) => {
         setError(e instanceof Error ? e.message : "Failed to load approval");
         setStatus("error");
       });
-  }, [approvalId]);
+  }, [approvalId, refreshOnChain]);
 
   useEffect(() => {
     if (!decisionId) return;
@@ -80,6 +103,57 @@ export function ApprovePage() {
       .then(setReceipt)
       .catch(() => setReceipt(null));
   }, [decisionId]);
+
+  const needsRegister = onChain != null && !onChain.registered;
+  const needsCovenant =
+    onChain != null &&
+    onChain.registered &&
+    approval?.executionPayload?.covenantHash &&
+    onChain.covenantHash?.toLowerCase() !== approval.executionPayload.covenantHash.toLowerCase();
+  const readyToExecute = onChain != null && !needsRegister && !needsCovenant;
+
+  async function registerAgent() {
+    if (!approval) return;
+    setStatus("setup");
+    setError("");
+    try {
+      const { client, address } = await connectWallet();
+      const agent = approval.executionPayload?.intent.agent as Hex;
+      const hash = await registerAgentOnChain(client, address, agent);
+      const publicClient = createPublicClient({ chain: PHAROS_CHAIN, transport: http(PHAROS_RPC) });
+      await publicClient.waitForTransactionReceipt({ hash });
+      await refreshOnChain(approval);
+      setStatus("ready");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Registration failed");
+      setStatus("ready");
+    }
+  }
+
+  async function publishCovenant() {
+    if (!approval?.executionPayload) return;
+    setStatus("setup");
+    setError("");
+    try {
+      const { client, address } = await connectWallet();
+      const agent = approval.executionPayload.intent.agent as Hex;
+      const covenant = approval.executionPayload.preflightRequest?.covenant ?? { tierLimits: [] };
+      const hash = await publishCovenantOnChain(
+        client,
+        address,
+        agent,
+        approval.executionPayload.covenantHash as Hex,
+        covenant,
+      );
+      const publicClient = createPublicClient({ chain: PHAROS_CHAIN, transport: http(PHAROS_RPC) });
+      await publicClient.waitForTransactionReceipt({ hash });
+      await refreshOnChain(approval);
+      setStatus("ready");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Publish covenant failed");
+      setStatus("ready");
+    }
+  }
 
   async function executeWithWallet() {
     if (!approvalId || !approval) return;
@@ -91,36 +165,75 @@ export function ApprovePage() {
         throw new Error(`Connect wallet ${approval.walletAddress}`);
       }
 
+      const chainStatus = await refreshOnChain(approval);
+      if (!chainStatus.registered) {
+        throw new Error("Register your agent on-chain first (button above).");
+      }
+      if (
+        approval.executionPayload?.covenantHash &&
+        chainStatus.covenantHash?.toLowerCase() !== approval.executionPayload.covenantHash.toLowerCase()
+      ) {
+        throw new Error("Publish covenant on-chain first (button above).");
+      }
+
       const prepRes = await fetch(`${API_BASE}/approvals/${approvalId}/execution`);
       const prep = (await prepRes.json()) as ExecutionPrep & { error?: string };
       if (!prepRes.ok) throw new Error(prep.error ?? "Could not prepare execution");
 
       const { intent, covenantHash, attestation } = prep.execution;
       const intentValue = BigInt(intent.value);
+      const publicClient = createPublicClient({ chain: PHAROS_CHAIN, transport: http(PHAROS_RPC) });
+
+      const args = [
+        {
+          agent: intent.agent as Hex,
+          target: intent.target as Hex,
+          data: intent.data as Hex,
+          value: intentValue,
+          nonce: BigInt(intent.nonce),
+        },
+        covenantHash as Hex,
+        BigInt(attestation.deadline),
+        attestation.v,
+        attestation.r as Hex,
+        attestation.s as Hex,
+      ] as const;
+
+      await publicClient.simulateContract({
+        address: CONTRACTS.guardedExecutor,
+        abi: GUARDED_EXECUTOR_ABI,
+        functionName: "execute",
+        account: address,
+        args,
+        ...(intentValue > 0n ? { value: intentValue } : {}),
+      });
+
+      let gas: bigint | undefined;
+      try {
+        const estimated = await publicClient.estimateContractGas({
+          address: CONTRACTS.guardedExecutor,
+          abi: GUARDED_EXECUTOR_ABI,
+          functionName: "execute",
+          account: address,
+          args,
+          ...(intentValue > 0n ? { value: intentValue } : {}),
+        });
+        gas = estimated > MAX_GAS ? MAX_GAS : estimated;
+      } catch {
+        gas = 500_000n;
+      }
+
       const hash = await client.writeContract({
         address: CONTRACTS.guardedExecutor,
         abi: GUARDED_EXECUTOR_ABI,
         functionName: "execute",
         chain: PHAROS_CHAIN,
         account: address,
-        args: [
-          {
-            agent: intent.agent as Hex,
-            target: intent.target as Hex,
-            data: intent.data as Hex,
-            value: intentValue,
-            nonce: BigInt(intent.nonce),
-          },
-          covenantHash as Hex,
-          BigInt(attestation.deadline),
-          attestation.v,
-          attestation.r as Hex,
-          attestation.s as Hex,
-        ],
+        args,
+        gas,
         ...(intentValue > 0n ? { value: intentValue } : {}),
       } as Parameters<typeof client.writeContract>[0]);
 
-      const publicClient = createPublicClient({ chain: PHAROS_CHAIN, transport: http(PHAROS_RPC) });
       const txReceipt = await publicClient.waitForTransactionReceipt({ hash });
 
       let parsedDecisionId = "";
@@ -154,7 +267,12 @@ export function ApprovePage() {
       setApproval(complete);
       setStatus("executed");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Execution failed");
+      const message = e instanceof Error ? e.message : "Execution failed";
+      setError(
+        message.includes("CovenantBreach") || message.includes("0x93c94702")
+          ? "CovenantBreach: register agent and publish covenant on-chain first, then retry."
+          : message,
+      );
       setStatus("ready");
     }
   }
@@ -194,14 +312,42 @@ export function ApprovePage() {
             </div>
           )}
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {onChain && status !== "executed" && (
+            <div className="rounded-md border p-3 text-xs space-y-2">
+              <p className="font-medium">On-chain setup (one-time)</p>
+              <p className="text-muted-foreground">
+                GuardedExecutor requires your agent identity and covenant hash on Pharos before execution.
+              </p>
+              <p>{onChain.registered ? "✓ Agent registered" : "○ Agent not registered"}</p>
+              <p>
+                {readyToExecute || (!needsRegister && !needsCovenant)
+                  ? "✓ Covenant published"
+                  : "○ Covenant not published for this approval"}
+              </p>
+            </div>
+          )}
 
-          {status === "ready" && approval && (
+          {error && <p className="text-sm text-destructive whitespace-pre-wrap">{error}</p>}
+
+          {status === "ready" && approval && needsRegister && (
+            <Button className="w-full" variant="outline" onClick={() => void registerAgent()}>
+              Step 1: Register agent on-chain
+            </Button>
+          )}
+
+          {status === "ready" && approval && !needsRegister && needsCovenant && (
+            <Button className="w-full" variant="outline" onClick={() => void publishCovenant()}>
+              Step 2: Publish covenant on-chain
+            </Button>
+          )}
+
+          {status === "ready" && approval && readyToExecute && (
             <Button className="w-full" onClick={() => void executeWithWallet()}>
               Connect wallet & execute
             </Button>
           )}
 
+          {status === "setup" && <p className="text-sm">Confirm setup transaction in your wallet…</p>}
           {status === "executing" && <p className="text-sm">Confirm transaction in your wallet…</p>}
 
           {status === "executed" && (
