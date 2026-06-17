@@ -1,6 +1,7 @@
 /** Pharos Atlantic chain config for wallet UX */
 export const PHAROS_CHAIN_ID = 688689;
-export const PHAROS_CHAIN_ID_HEX = "0xa81a1" as const;
+/** 688689 = 0xa8231 (not 0xa81a1 which is 688545 — wrong chain) */
+export const PHAROS_CHAIN_ID_HEX = "0xa8231" as const;
 
 export const PHAROS_RPC = "https://atlantic.dplabs-internal.com";
 

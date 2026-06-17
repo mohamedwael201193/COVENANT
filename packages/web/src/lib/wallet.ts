@@ -15,6 +15,13 @@ export function getEthereum(): EthereumProvider | undefined {
 }
 
 export async function ensurePharosChain(provider: EthereumProvider): Promise<void> {
+  const readChainId = async (): Promise<number> => {
+    const hex = (await provider.request({ method: "eth_chainId" })) as string;
+    return Number.parseInt(hex, 16);
+  };
+
+  if ((await readChainId()) === PHAROS_CHAIN_ID) return;
+
   try {
     await provider.request({
       method: "wallet_switchEthereumChain",
@@ -31,12 +38,20 @@ export async function ensurePharosChain(provider: EthereumProvider): Promise<voi
             chainName: PHAROS_CHAIN.name,
             nativeCurrency: PHAROS_CHAIN.nativeCurrency,
             rpcUrls: PHAROS_CHAIN.rpcUrls.default.http,
+            blockExplorerUrls: ["https://atlantic.pharosscan.xyz"],
           },
         ],
       });
     } else {
       throw err;
     }
+  }
+
+  const chainId = await readChainId();
+  if (chainId !== PHAROS_CHAIN_ID) {
+    throw new Error(
+      `Switch MetaMask to Pharos Atlantic (chain ID ${PHAROS_CHAIN_ID}). Currently on chain ${chainId}.`,
+    );
   }
 }
 
