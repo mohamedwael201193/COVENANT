@@ -2,6 +2,7 @@ import pg from "pg";
 import { randomBytes } from "node:crypto";
 import type { ApprovalRequest, CovenantSession, SessionPermission, SiweChallenge } from "./types.js";
 import { buildSiweMessage, getDashboardBase } from "./siwe.js";
+import { buildPgPoolConfig } from "./pgConfig.js";
 
 let pool: pg.Pool | null = null;
 
@@ -9,7 +10,7 @@ function getPool(): pg.Pool {
   if (!pool) {
     const url = process.env.DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL required for Postgres session store");
-    pool = new pg.Pool({ connectionString: url, ssl: url.includes("localhost") ? undefined : { rejectUnauthorized: false } });
+    pool = new pg.Pool(buildPgPoolConfig(url));
   }
   return pool;
 }

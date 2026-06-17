@@ -1,6 +1,6 @@
 {
   "name": "covenant-skill",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "COVENANT skill engine — preflight, attestation, and chain layer for agent trust on Pharos",
   "type": "module",
   "license": "MIT",

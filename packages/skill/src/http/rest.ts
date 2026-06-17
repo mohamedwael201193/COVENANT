@@ -190,18 +190,23 @@ export function createRestApp(ctx: RestContext): Express {
   });
 
   app.get("/api/sessions/:sessionId", async (req, res) => {
-    const { getSession } = await import("../session/store.js");
-    const session = await getSession(req.params.sessionId);
-    if (!session) {
-      res.status(404).json({ error: "not found" });
-      return;
+    try {
+      const { getSession } = await import("../session/store.js");
+      const session = await getSession(req.params.sessionId);
+      if (!session) {
+        res.status(404).json({ error: "not found" });
+        return;
+      }
+      res.json({
+        sessionId: session.id,
+        walletAddress: session.walletAddress,
+        permissions: session.permissions,
+        expiresAt: new Date(session.expiresAt).toISOString(),
+      });
+    } catch (error) {
+      ctx.log.error({ err: error }, "get session failed");
+      res.status(503).json({ error: "session store unavailable" });
     }
-    res.json({
-      sessionId: session.id,
-      walletAddress: session.walletAddress,
-      permissions: session.permissions,
-      expiresAt: new Date(session.expiresAt).toISOString(),
-    });
   });
 
   app.post("/api/sessions/:sessionId/revoke", async (req, res) => {
@@ -231,27 +236,37 @@ export function createRestApp(ctx: RestContext): Express {
   });
 
   app.get("/api/approvals/:id", async (req, res) => {
-    const approval = await getApproval(req.params.id);
-    if (!approval) {
-      res.status(404).json({ error: "not found" });
-      return;
+    try {
+      const approval = await getApproval(req.params.id);
+      if (!approval) {
+        res.status(404).json({ error: "not found" });
+        return;
+      }
+      res.json(approval);
+    } catch (error) {
+      ctx.log.error({ err: error, approvalId: req.params.id }, "get approval failed");
+      res.status(503).json({ error: "approval store unavailable" });
     }
-    res.json(approval);
   });
 
   app.get("/api/approvals/:id/status", async (req, res) => {
-    const approval = await getApproval(req.params.id);
-    if (!approval) {
-      res.status(404).json({ error: "not found" });
-      return;
+    try {
+      const approval = await getApproval(req.params.id);
+      if (!approval) {
+        res.status(404).json({ error: "not found" });
+        return;
+      }
+      res.json({
+        approvalId: approval.id,
+        status: approval.status,
+        txHash: approval.txHash,
+        decisionId: approval.decisionId,
+        approvalUrl: approval.approvalUrl,
+      });
+    } catch (error) {
+      ctx.log.error({ err: error, approvalId: req.params.id }, "get approval status failed");
+      res.status(503).json({ error: "approval store unavailable" });
     }
-    res.json({
-      approvalId: approval.id,
-      status: approval.status,
-      txHash: approval.txHash,
-      decisionId: approval.decisionId,
-      approvalUrl: approval.approvalUrl,
-    });
   });
 
   app.get("/api/approvals/:id/execution", async (req, res) => {
