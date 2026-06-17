@@ -1,32 +1,43 @@
-# Send money with COVENANT (agent prompt)
+# Agent Send Money Prompt
 
-You have COVENANT MCP tools. Send PHRS on Pharos **without private keys**.
+Full PHRS send workflow with COVENANT guardrails.
 
-## Steps
+```text
+Send PHRS on Pharos Atlantic using COVENANT. No private keys.
 
-1. `covenant_reputation` — check agent Trust Capital tier
-2. `covenant_preflight` — get ALLOW/WARN/DENY (works with zero setup)
-3. If ALLOW: `covenant_sign_attestation` — hosted attestation (default API)
-4. `covenant_connect_wallet` + `covenant_create_session` — if user not onboarded
-5. `covenant_request_approval` — get approvalUrl for user
-6. User opens approvalUrl and signs in wallet
-7. `covenant_execute_authorized` — confirm approval
-8. `covenant_get_receipt` — audit on-chain
+Agent (linked on-chain): [AGENT_ADDRESS]
+Recipient: [RECIPIENT_ADDRESS]
+Amount wei: [VALUE_WEI]
+Nonce: [UNIQUE_TIMESTAMP]
 
-## Example preflight
+## Workflow
 
-```json
-{
-  "intent": {
-    "agent": "0xYourAgent",
-    "target": "0xRecipient",
-    "data": "0x",
-    "value": "10000000000000000",
-    "nonce": "1700000001"
-  },
-  "covenantHash": "0x...",
-  "covenant": { "version": "1", "...": "..." }
-}
+1. covenant_health
+2. covenant_reputation for the agent
+3. covenant_preflight with intent (agent, target, value, data: 0x, nonce) and covenant allowlisting recipient
+4. If DENY → stop and explain violations.
+5. If ALLOW or WARN:
+   a. covenant_sign_attestation
+   b. covenant_connect_wallet (if no session) → print connectUrl, wait for user
+   c. covenant_create_session after SIWE
+   d. covenant_request_approval → print approvalUrl, wait for user
+   e. covenant_execute_authorized after user approves
+   f. covenant_get_receipt with decisionId
+
+## Report
+
+| Step | Status | Details |
+| preflight verdict | ... |
+| intentHash | ... |
+| sessionId | ... |
+| approvalId | ... |
+| txHash | ... |
+| receipt | ... |
+
+## Rules
+
+- Never ask for private key or seed phrase.
+- MetaMask must be on chain 688689.
+- Use linked agent address from IdentityRegistry, not owner wallet as agent field.
+- Do not skip preflight or attestation.
 ```
-
-Never ask the user for a private key or seed phrase.

@@ -1,194 +1,106 @@
 # COVENANT
 
-**Stripe for Agent Trust on Pharos.**
+**COVENANT is a Trust, Authorization and Execution Skill for AI Agents on Pharos.**
 
-Covenant is a reusable MCP skill suite that lets AI agents evaluate risk, request wallet authorization, execute safely, produce receipts, and build Trust Capital without ever holding a user private key.
-
-```text
-Any AI agent
-  -> Covenant skills
-  -> deterministic preflight
-  -> user approval URL
-  -> wallet execution
-  -> DecisionLog receipt
-  -> Trust Capital update
-```
-
-Live API: `https://covenant-skill.onrender.com`  
-Hosted MCP: `https://covenant-skill.onrender.com/mcp`  
-Demo UI: `https://covenant-web-mu.vercel.app`
-
-## 1. What Is Covenant?
-
-Covenant is not a dashboard. It is a **trust and authorization rail** for autonomous agents.
-
-Agents call Covenant before they touch money:
+[![npm](https://img.shields.io/npm/v/covenant-mcp)](https://www.npmjs.com/package/covenant-mcp)
+[![GitHub](https://img.shields.io/github/stars/mohamedwael201193/COVENANT)](https://github.com/mohamedwael201193/COVENANT)
 
 ```text
-covenant_reputation -> covenant_simulate -> covenant_preflight -> covenant_request_approval
+Agent
+  ↓
+COVENANT Skill (MCP)
+  ↓
+Risk Evaluation
+  ↓
+Wallet Approval
+  ↓
+Guarded Execution
+  ↓
+Decision Receipt
 ```
 
-The user approves in a wallet. Covenant records the outcome on Pharos.
+**Live:** [Skill API](https://covenant-skill.onrender.com) · [Hosted MCP](https://covenant-skill.onrender.com/mcp) · [Approval UI](https://covenant-web-mu.vercel.app) · [Proof](docs/proofs/PROOF_OF_EXECUTION.md)
 
-## 2. Why Agents Need Covenant
+---
 
-Without Covenant:
+## Why COVENANT Exists
 
-```text
-LLM judgment + hot key + no audit trail
-```
+### Problem
 
-With Covenant:
+Current AI agents can call tools — but they **cannot safely move value**:
 
-```text
-deterministic policy + user wallet approval + on-chain receipt + reputation
-```
+- No deterministic trust evaluation before execution
+- No wallet-native authorization without custodial keys
+- No verifiable receipts or reputation accrual
+- LLM judgment is not a security boundary
 
-Agents get a clear `ALLOW`, `WARN`, or `DENY`. Users keep control.
+### Solution
 
-## 3. Skills Overview
+COVENANT provides:
 
-### Skill: Trust Evaluation
+| Capability | Tool |
+|---|---|
+| **Trust Capital** | `covenant_reputation` |
+| **Risk Evaluation** | `covenant_preflight`, `covenant_simulate`, `covenant_verify_counterparty` |
+| **Wallet Authorization** | `covenant_connect_wallet`, `covenant_create_session` |
+| **Approval Requests** | `covenant_request_approval` |
+| **Guarded Execution** | User signs via approval URL → `GuardedExecutor` |
+| **Receipts** | `covenant_get_receipt` → `DecisionLog` |
 
-Read an agent’s Trust Capital before execution.
+No private keys in agents. No custodial wallets. Deterministic `ALLOW` / `WARN` / `DENY`.
 
-```json
-{ "tool": "covenant_reputation", "arguments": { "agent": "0xAgent" } }
-```
+---
 
-### Skill: Counterparty Verification
+## 2-Minute Quick Start
 
-Check a recipient or contract before sending value.
-
-```json
-{ "tool": "covenant_verify_counterparty", "arguments": { "address": "0xTarget" } }
-```
-
-### Skill: Transaction Preflight
-
-Evaluate an on-chain intent with rules and simulation.
-
-```json
-{
-  "tool": "covenant_preflight",
-  "arguments": {
-    "intent": {
-      "agent": "0xAgent",
-      "target": "0xTarget",
-      "data": "0x",
-      "value": "0",
-      "nonce": "1"
-    },
-    "covenantHash": "0x...",
-    "covenant": {
-      "version": "1",
-      "agent": "0xAgent",
-      "owner": "0xOwner",
-      "allowlist": ["0xTarget"],
-      "denylist": [],
-      "baseMaxValueWei": "1000000000000000000",
-      "tierLimits": [{ "tier": 1, "maxValueWei": "1000000000000000000" }],
-      "minCounterpartyTier": 0,
-      "timeWindows": [],
-      "requiredChecks": ["simulation"],
-      "createdAt": "2026-06-17T00:00:00.000Z"
-    }
-  }
-}
-```
-
-### Skill: Trust Capital
-
-Every execution can become reputation evidence.
-
-```json
-{ "tool": "covenant_get_receipt", "arguments": { "decisionId": "1" } }
-```
-
-### Skill: Wallet Authorization
-
-Create a SIWE session without exposing keys.
-
-```json
-{ "tool": "covenant_connect_wallet", "arguments": { "walletAddress": "0xUser" } }
-```
-
-### Skill: Execution Approval
-
-Create a browser approval URL for user wallet execution.
-
-```json
-{
-  "tool": "covenant_request_approval",
-  "arguments": {
-    "sessionId": "sess_...",
-    "intentHash": "0x...",
-    "verdict": "ALLOW",
-    "executionPayload": {
-      "intent": { "agent": "0xAgent", "target": "0xTarget", "data": "0x", "value": "0", "nonce": "1" },
-      "covenantHash": "0x...",
-      "attestation": { "deadline": "1781660000", "v": 27, "r": "0x...", "s": "0x..." }
-    }
-  }
-}
-```
-
-## 4. Architecture
-
-```text
-MCP Client / Agent
-  -> covenant-mcp stdio or hosted /mcp
-  -> Skill API
-  -> Postgres session + approval store
-  -> Pharos contracts
-     - GuardedExecutor
-     - DecisionLog
-     - ReputationRegistry
-  -> Web approval UI
-```
-
-One source of truth: sessions and approvals persist in Postgres. Production approvals are never memory-only.
-
-## 5. Trust Capital
-
-Trust Capital is agent reputation on Pharos. Agents earn or lose trust based on audited execution history.
-
-```bash
-curl https://covenant-skill.onrender.com/api/reputation/0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3
-```
-
-## 6. Pharos Integration
-
-Covenant is deployed on Pharos Atlantic testnet (`688689`) and uses live RPC reads by default.
-
-```text
-RPC: https://atlantic.dplabs-internal.com
-Explorer: https://atlantic.pharosscan.xyz
-```
-
-## 7. Install In 2 Minutes
-
-No secrets required for health, reputation, simulate, preflight, or counterparty verification.
+### 1. Install
 
 ```bash
 npx -y covenant-mcp init
 ```
 
-Verify:
+This creates:
 
-```bash
-npx -y covenant-mcp
-```
+| File | Purpose |
+|---|---|
+| `.cursor/mcp.json` | Active MCP config (zero secrets) |
+| `.cursor/mcp.json.example` | Reference copy |
+| `.env.covenant` | Optional env template |
 
-Then ask your agent:
+### 2. Restart your MCP client
+
+Restart **Cursor**, **Claude Desktop**, or **Claude Code** so the new MCP server loads.
+
+### 3. Paste one prompt
+
+Open a **fresh chat** and paste:
 
 ```text
-Use Covenant and call covenant_health.
+You are onboarding COVENANT.
+
+Read the repository README.
+Validate the MCP installation.
+Discover all tools.
+
+Run:
+- covenant_health
+- covenant_reputation
+- covenant_simulate
+- covenant_preflight
+
+Then provide a report.
+
+Do not ask for permission.
+Execute the full validation workflow.
 ```
 
-`init` creates `.env.covenant`, `.cursor/mcp.json.example`, and `.cursor/mcp.json` when no MCP config exists yet.
+Full prompt: [`docs/prompts/agent-bootstrap.md`](docs/prompts/agent-bootstrap.md)
 
-## 8. Cursor Setup
+**Expected:** 17 tools, `health: ok`, live reputation read, simulate success, preflight verdict.
+
+---
+
+## MCP Config (zero secrets)
 
 `.cursor/mcp.json`:
 
@@ -204,7 +116,7 @@ Use Covenant and call covenant_health.
 }
 ```
 
-Hosted option:
+**Hosted MCP** (no local Node process):
 
 ```json
 {
@@ -216,250 +128,225 @@ Hosted option:
 }
 ```
 
-## 9. Claude Desktop Setup
+---
 
-```json
-{
-  "mcpServers": {
-    "covenant": {
-      "command": "npx",
-      "args": ["-y", "covenant-mcp"],
-      "env": { "PREFLIGHT_LLM_ENABLED": "false" }
-    }
-  }
-}
+## Demo Script (For Judges)
+
+**Expected duration: ~90 seconds**
+
+| Step | Action |
+|---|---|
+| 1 | Open fresh Cursor chat |
+| 2 | Paste **[Prompt A](docs/prompts/agent-full-demo.md)** (`agent-full-demo.md`) |
+| 3 | Agent installs Covenant (`npx covenant-mcp init` if needed) |
+| 4 | Agent discovers **17 tools** |
+| 5 | Agent runs `covenant_health` |
+| 6 | Agent runs `covenant_reputation` |
+| 7 | Agent runs `covenant_preflight` |
+| 8 | Agent requests wallet approval (`covenant_connect_wallet` → `covenant_request_approval`) |
+| 9 | Open `approvalUrl` (or `connectUrl` first for SIWE) |
+| 10 | Approve in MetaMask on **chain 688689** |
+| 11 | Show `txHash` |
+| 12 | Show receipt (`covenant_get_receipt`) |
+
+**Recorded proof:** [docs/proofs/PROOF_OF_EXECUTION.md](docs/proofs/PROOF_OF_EXECUTION.md)
+
+```text
+txHash:     0x1c5a7e9d00c29070c0508b47524c32284b983022b43ac338e4afe15ee7bebd1c
+decisionId: 1
 ```
 
-## 10. Claude Code Setup
+---
 
-Local stdio:
+## Judge Quick Verify (< 3 min)
+
+```bash
+# 1. Install
+npx -y covenant-mcp init
+
+# 2. Health
+curl -s https://covenant-skill.onrender.com/health
+
+# 3. Proof tx on PharosScan
+# https://atlantic.pharosscan.xyz/tx/0x1c5a7e9d00c29070c0508b47524c32284b983022b43ac338e4afe15ee7bebd1c
+
+# 4. Receipt
+curl -s https://covenant-skill.onrender.com/api/receipt/1
+```
+
+Full guide: [`docs/JUDGE_QUICK_START.md`](docs/JUDGE_QUICK_START.md)
+
+---
+
+## Prompt Library
+
+Copy-paste prompts for agents — no doc hunting:
+
+| Prompt | Use when |
+|---|---|
+| [`agent-bootstrap.md`](docs/prompts/agent-bootstrap.md) | First install + tool validation |
+| [`agent-health-check.md`](docs/prompts/agent-health-check.md) | Quick MCP smoke test |
+| [`agent-risk-review.md`](docs/prompts/agent-risk-review.md) | Preflight before any tx |
+| [`agent-wallet-authorization.md`](docs/prompts/agent-wallet-authorization.md) | SIWE session + approval URL |
+| [`agent-send-money.md`](docs/prompts/agent-send-money.md) | Full send workflow |
+| [`agent-counterparty-check.md`](docs/prompts/agent-counterparty-check.md) | Recipient risk check |
+| [`agent-full-demo.md`](docs/prompts/agent-full-demo.md) | **End-to-end judge demo** |
+
+---
+
+## Standard Agent Workflow
+
+```text
+covenant_health                    # optional readiness
+covenant_reputation                # Trust Capital tier
+covenant_simulate                  # eth_call debug
+covenant_preflight                 # ALLOW | WARN | DENY
+covenant_sign_attestation          # hosted signature (no local keys)
+covenant_connect_wallet            # SIWE → connectUrl
+covenant_create_session            # after user signs
+covenant_request_approval          # approvalUrl
+[user approves in browser wallet]
+covenant_get_receipt               # DecisionLog audit
+```
+
+---
+
+## 17 MCP Tools
+
+**Zero-setup (no secrets):**
+
+`covenant_health` · `covenant_reputation` · `covenant_simulate` · `covenant_preflight` · `covenant_verify_counterparty` · `covenant_get_receipt` · `covenant_sign_attestation`
+
+**Wallet flow:**
+
+`covenant_connect_wallet` · `covenant_create_session` · `covenant_request_approval` · `covenant_get_pending_approvals` · `covenant_execute_authorized` · `covenant_revoke_session`
+
+**Owner / oracle (requires deployer key):**
+
+`covenant_register_identity` · `covenant_set_covenant` · `covenant_rotate_key` · `covenant_attest_outcome`
+
+Schemas: [`docs/MCP_REFERENCE.md`](docs/MCP_REFERENCE.md)
+
+---
+
+## Pharos Atlantic (Production)
+
+| Resource | Value |
+|---|---|
+| Chain ID | `688689` (`0xa8231`) |
+| RPC | `https://atlantic.dplabs-internal.com` |
+| Explorer | https://atlantic.pharosscan.xyz |
+| npm | `covenant-mcp@0.2.7` |
+
+| Contract | Address |
+|---|---|
+| GuardedExecutor | `0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F` |
+| DecisionLog | `0x8A80D270dd7028536ecB6f92b04eec11F929d603` |
+| IdentityRegistry | `0x05545F026b75f03aE9Cf1eA8a8373473c94ed323` |
+| CovenantRegistry | `0x068bB96e849F0DE3D49944Ec0F4aEd3D6B165770` |
+| ReputationRegistry | `0x92b8815A17D85E45DB5Da9952764Ee2ce072A973` |
+| Attester | `0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3` |
+
+---
+
+## Client Setup
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+`npx covenant-mcp init` → restart Cursor → paste `agent-bootstrap.md`.
+
+</details>
+
+<details>
+<summary><strong>Claude Desktop / Claude Code</strong></summary>
 
 ```bash
 claude mcp add covenant -- npx -y covenant-mcp
-```
-
-Hosted:
-
-```bash
+# or hosted:
 claude mcp add --transport http covenant https://covenant-skill.onrender.com/mcp
 ```
 
-## 11. OpenAI Agents Setup
+</details>
+
+<details>
+<summary><strong>OpenAI Agents SDK</strong></summary>
 
 ```ts
 import { Agent, hostedMcpTool } from "@openai/agents";
 
-export const agent = new Agent({
+const agent = new Agent({
   name: "Covenant Agent",
-  instructions: "Use Covenant before on-chain execution.",
+  instructions: "Use COVENANT before any on-chain execution.",
   tools: [
     hostedMcpTool({
       serverLabel: "covenant",
       serverUrl: "https://covenant-skill.onrender.com/mcp",
-      requireApproval: "never"
-    })
-  ]
+      requireApproval: "never",
+    }),
+  ],
 });
 ```
 
-## 12. Antigravity Setup
+</details>
 
-Use the Cursor config above. Then ask:
+<details>
+<summary><strong>Antigravity</strong></summary>
 
-```text
-Use Covenant to check health, read reputation, simulate a zero-value call, and preflight it.
-```
+Same as Cursor — use `.cursor/mcp.json` from `npx covenant-mcp init`.
 
-Expected:
+</details>
 
-```text
-health ok
-reputation returned
-simulate returned
-preflight ALLOW/WARN/DENY
-```
+---
 
-## 13. Hosted MCP
+## Security Model
 
-Current hosted endpoint:
+- User never shares private keys or seed phrases
+- Agent never stores wallet secrets
+- COVENANT is **not** a custodian
+- `covenant_preflight` evaluates only — signing is separate
+- Money movement requires **wallet approval** in browser
+- Sessions and approvals persist in **Postgres** (production)
+- LLMs **cannot** override deterministic `DENY`
 
-```text
-https://covenant-skill.onrender.com/mcp
-```
+Details: [`docs/SECURITY.md`](docs/SECURITY.md)
 
-Production target:
+---
 
-```text
-https://api.covenant.xyz/mcp
-```
+## FAQ
 
-Test hosted MCP manually:
+**Do I need API keys?**  
+No for health, reputation, simulate, preflight, or hosted attestation.
 
-```bash
-curl -s https://covenant-skill.onrender.com/mcp
-node packages/skill/scripts/test-hosted-mcp.mjs
-```
+**Why `covenant-mcp` not `@covenant/mcp`?**  
+Public npm package is unscoped: `covenant-mcp`.
 
-## 14. Wallet Authorization
+**Is the web UI required?**  
+No. It's a demo for wallet connect/approve. Agents use MCP tools.
 
-```text
-Agent -> covenant_connect_wallet -> connectUrl
-User -> opens URL -> signs SIWE -> sessionId
-Agent -> covenant_request_approval -> approvalUrl
-User -> opens URL -> executes with wallet
-```
+**MetaMask chain ID?**  
+Must be **688689** (`0xa8231`). Delete any network saved as 688545.
 
-No private key is shared with the agent, the server, or the UI.
+---
 
-## 15. Security Model
+## Documentation
 
-- User never shares private keys or seed phrases.
-- Agent never stores wallet secrets.
-- Covenant is not a custodian.
-- `covenant_preflight` evaluates only; signing is separate.
-- Money movement requires wallet approval.
-- Production sessions and approvals persist in Postgres.
-- LLMs cannot override deterministic `DENY`.
+| Doc | Description |
+|---|---|
+| [docs/README.md](docs/README.md) | Documentation index |
+| [docs/JUDGE_QUICK_START.md](docs/JUDGE_QUICK_START.md) | 3-minute judge verification |
+| [docs/proofs/PROOF_OF_EXECUTION.md](docs/proofs/PROOF_OF_EXECUTION.md) | Real on-chain proof |
+| [docs/architecture/README.md](docs/architecture/README.md) | System architecture |
+| [docs/MCP_REFERENCE.md](docs/MCP_REFERENCE.md) | Tool schemas |
+| [AGENT_EXPERIENCE_AUDIT.md](AGENT_EXPERIENCE_AUDIT.md) | Onboarding audit |
+| [AGENTS.md](AGENTS.md) | Agent skill manifest |
 
-## 16. Tool Reference
+---
 
-Zero-setup tools:
+## Links
 
-```text
-covenant_health
-covenant_reputation
-covenant_simulate
-covenant_preflight
-covenant_verify_counterparty
-```
-
-Wallet and approval tools:
-
-```text
-covenant_connect_wallet
-covenant_create_session
-covenant_request_approval
-covenant_get_pending_approvals
-covenant_execute_authorized
-covenant_revoke_session
-```
-
-Execution and audit tools:
-
-```text
-covenant_sign_attestation
-covenant_get_receipt
-covenant_attest_outcome
-```
-
-Owner/oracle tools:
-
-```text
-covenant_register_identity
-covenant_set_covenant
-covenant_rotate_key
-```
-
-## 17. Skill Workflows
-
-Risk review:
-
-```text
-covenant_health -> covenant_reputation -> covenant_simulate -> covenant_preflight
-```
-
-Send money:
-
-```text
-covenant_preflight -> covenant_sign_attestation -> covenant_request_approval -> user executes -> covenant_get_receipt
-```
-
-Counterparty check:
-
-```text
-covenant_verify_counterparty -> covenant_preflight
-```
-
-## 18. Example Prompts
-
-Prompt library:
-
-```text
-docs/prompts/INSTALL_AGENT.md
-docs/prompts/WALLET_SETUP.md
-docs/prompts/SEND_TRANSACTION.md
-docs/prompts/RISK_REVIEW.md
-docs/prompts/COUNTERPARTY_CHECK.md
-docs/prompts/agent-risk-review.md
-docs/prompts/agent-send-money.md
-docs/prompts/agent-preflight.md
-docs/prompts/agent-counterparty-check.md
-docs/prompts/agent-wallet-authorization.md
-docs/prompts/agent-covenant-audit.md
-```
-
-Example:
-
-```text
-Use Covenant to preflight this Pharos transfer. If ALLOW, create an approval URL. Do not ask me for a private key.
-```
-
-## 19. FAQ
-
-**Do I need GoPlus keys?**  
-No. Public tools work without GoPlus. If keys are absent, GoPlus is skipped or reported as unavailable.
-
-**Do I need `DEPLOYER_PRIVATE_KEY`?**  
-No for public tools. Hosted attestation can sign ALLOW attestations.
-
-**Why not `@covenant/mcp`?**  
-The public npm package is currently unscoped: `covenant-mcp`.
-
-## 20. Troubleshooting
-
-Tool discovery:
-
-```bash
-npx -y covenant-mcp
-```
-
-Clean install:
-
-```bash
-mkdir covenant-test && cd covenant-test
-npm install covenant-mcp
-npx covenant-mcp init
-```
-
-Wallet flow:
-
-```bash
-node packages/skill/scripts/test-wallet-flow.mjs
-```
-
-Benchmark:
-
-```bash
-node scripts/benchmark-mcp.mjs
-```
-
-## 21. Live Contracts
-
-```text
-IdentityRegistry:   0x05545F026b75f03aE9Cf1eA8a8373473c94ed323
-CovenantRegistry:   0x068bB96e849F0DE3D49944Ec0F4aEd3D6B165770
-DecisionLog:        0x8A80D270dd7028536ecB6f92b04eec11F929d603
-ReputationRegistry: 0x92b8815A17D85E45DB5Da9952764Ee2ce072A973
-GuardedExecutor:    0x2741bAF6F51e5Ab67E81DdDCb1439679Bebd2d2F
-Attester:           0xf76e6B0920e9332fF4410f6dD53F01722AbC71a3
-```
-
-## 22. Demo Links
-
-```text
-Skill API:  https://covenant-skill.onrender.com
-Hosted MCP: https://covenant-skill.onrender.com/mcp
-Web UI:     https://covenant-web-mu.vercel.app
-GitHub:     https://github.com/mohamedwael201193/COVENANT
-NPM:        https://www.npmjs.com/package/covenant-mcp
-```
+- **GitHub:** https://github.com/mohamedwael201193/COVENANT
+- **npm:** https://www.npmjs.com/package/covenant-mcp
+- **Skill API:** https://covenant-skill.onrender.com
+- **Hosted MCP:** https://covenant-skill.onrender.com/mcp
+- **Approval UI:** https://covenant-web-mu.vercel.app

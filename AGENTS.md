@@ -2,54 +2,63 @@
 
 Install COVENANT as an MCP server — not a dashboard. The web UI is a **demo only**.
 
-## Quick install (< 5 min)
+## 2-minute start
 
 ```bash
-npx covenant-mcp init
+npx -y covenant-mcp init
 ```
 
-Add `packages/mcp/config/cursor.mcp.json` to your MCP client, fill env vars, restart the client.
+Restart your MCP client. Paste **[docs/prompts/agent-bootstrap.md](docs/prompts/agent-bootstrap.md)** into a fresh chat.
+
+## Full demo (judges)
+
+**[docs/prompts/agent-full-demo.md](docs/prompts/agent-full-demo.md)**
 
 ## When to use COVENANT
 
-Use COVENANT **before** an autonomous agent executes on-chain actions (transfers, contract calls, payments).
+Use COVENANT **before** autonomous agents execute on-chain actions (transfers, contract calls, payments).
 
-Do **not** use COVENANT for off-chain auth, custodial wallets, or LLM-only safety checks.
+Do **not** use for off-chain auth, custodial wallets, or LLM-only safety checks.
 
 ## Standard tool sequence
 
-1. `covenant_health` — verify MCP setup (optional)
-2. `covenant_reputation` — read Trust Capital tier
-3. `covenant_preflight` — deterministic verdict + signed ALLOW attestation
-4. Submit `GuardedExecutor.execute` with attestation (client-side)
-5. `covenant_get_receipt` — audit trail from DecisionLog
+```text
+covenant_health              → optional readiness
+covenant_reputation          → Trust Capital tier
+covenant_preflight           → ALLOW | WARN | DENY
+covenant_sign_attestation    → hosted signature
+covenant_connect_wallet      → SIWE connectUrl
+covenant_request_approval    → approvalUrl
+[user approves in wallet]
+covenant_get_receipt         → DecisionLog audit
+```
 
-## Tools
+## Tools (17)
 
-All tools are prefixed `covenant_*` for discoverability in multi-server MCP setups.
+All prefixed `covenant_*` for multi-server MCP discovery.
 
-| Tool | When to use | When NOT to use |
-|---|---|---|
-| `covenant_preflight` | Before any guarded execution | After tx (use receipt) |
-| `covenant_reputation` | Before preflight for tier limits | As authorization |
-| `covenant_get_receipt` | After execution | Before preflight |
-| `covenant_simulate` | Debug calldata / gas | As authorization |
-| `covenant_verify_counterparty` | Risk review | Alone to approve payment |
+| Tool | When to use |
+|---|---|
+| `covenant_preflight` | Before any guarded execution |
+| `covenant_reputation` | Before preflight for tier limits |
+| `covenant_connect_wallet` | Start wallet authorization |
+| `covenant_request_approval` | Get approval URL |
+| `covenant_get_receipt` | After execution |
+| `covenant_simulate` | Debug calldata (not authorization) |
 
-Full schemas: [docs/MCP_REFERENCE.md](../docs/MCP_REFERENCE.md)
+Full schemas: [docs/MCP_REFERENCE.md](docs/MCP_REFERENCE.md)
 
 ## Documentation
 
-- [5-minute install](./docs/skill/INSTALL.md)
-- [Agent examples](./docs/skill/EXAMPLES.md)
-- [Integrations](./docs/skill/INTEGRATIONS.md)
-- [Competitive analysis](./docs/skill/COMPARISON.md)
-- [Skill scorecard](./docs/skill/SCORECARD.md)
+- [README.md](README.md) — start here
+- [docs/prompts/](docs/prompts/) — copy-paste agent prompts
+- [docs/JUDGE_QUICK_START.md](docs/JUDGE_QUICK_START.md) — 3-min verification
+- [docs/proofs/PROOF_OF_EXECUTION.md](docs/proofs/PROOF_OF_EXECUTION.md) — real tx proof
 
 ## Package
 
 ```bash
-npx covenant-mcp
+npx -y covenant-mcp
 ```
 
-NPM: `covenant-mcp` · GitHub: [COVENANT](https://github.com/mohamedwael201193/COVENANT)
+npm: `covenant-mcp@0.2.7` · GitHub: [COVENANT](https://github.com/mohamedwael201193/COVENANT)

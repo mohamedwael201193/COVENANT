@@ -1,67 +1,48 @@
-# Wallet authorization (agent prompt)
+# Agent Wallet Authorization Prompt
 
-Use COVENANT to request user wallet authorization without ever handling a private key.
+SIWE session + approval URL — no private keys.
 
-## Goal
+```text
+Use COVENANT to authorize my wallet for guarded execution on Pharos Atlantic.
 
-Create a session and approval URL the user can complete in a browser wallet.
+Wallet: [USER_WALLET_ADDRESS]
+Chain: 688689 (Pharos Atlantic — NOT 688545)
 
-## Session flow
+## Session
 
-1. Ask for the user's wallet address.
-2. Call `covenant_connect_wallet`.
-3. Share the returned `connectUrl`.
-4. User opens the URL and signs the SIWE message.
-5. Capture or ask for the returned `sessionId`.
+1. covenant_connect_wallet for the wallet address.
+2. Print clearly:
 
-## Approval flow
+   ==================================================
+   USER ACTION REQUIRED — WALLET CONNECT
+   connectUrl: [FULL URL from tool]
+   nonce: [NONCE]
+   ==================================================
 
-1. Run `covenant_preflight`.
-2. If `ALLOW`, call `covenant_sign_attestation`.
-3. Call `covenant_request_approval` with:
-   - `sessionId`
-   - `intentHash`
-   - `verdict`
-   - `executionPayload.intent`
-   - `executionPayload.covenantHash`
-   - `executionPayload.attestation`
-4. Share the returned `approvalUrl`.
-5. User opens the URL, connects wallet, and executes.
-6. Call `covenant_execute_authorized` to check status.
-7. Call `covenant_get_receipt` when a `decisionId` is available.
+3. STOP. Wait for user to sign SIWE in browser and reply DONE with sessionId or signature details.
+4. covenant_create_session with signature, message, nonce.
 
-## Example approval payload
+## Approval (after preflight ALLOW or WARN)
 
-```json
-{
-  "sessionId": "sess_abc123",
-  "intentHash": "0xIntentHash",
-  "verdict": "ALLOW",
-  "preflightSummary": {
-    "summary": "Zero-value guarded execution passed simulation and policy checks."
-  },
-  "executionPayload": {
-    "intent": {
-      "agent": "0xAgentAddress",
-      "target": "0xTargetAddress",
-      "data": "0x",
-      "value": "0",
-      "nonce": "1781660001"
-    },
-    "covenantHash": "0xCovenantHash",
-    "attestation": {
-      "deadline": "1781663600",
-      "v": 27,
-      "r": "0x...",
-      "s": "0x..."
-    }
-  }
-}
+5. covenant_preflight for the intended transaction.
+6. If ALLOW or WARN: covenant_sign_attestation.
+7. covenant_request_approval with sessionId and executionPayload.
+8. Print:
+
+   ==================================================
+   USER ACTION REQUIRED — EXECUTION APPROVAL
+   approvalUrl: [FULL URL from tool]
+   ==================================================
+
+9. STOP. Wait for user to approve in MetaMask on chain 688689.
+10. covenant_execute_authorized or poll approval status.
+11. covenant_get_receipt when decisionId is available.
+
+## Rules
+
+- Never ask for private key or seed phrase.
+- Never execute after DENY.
+- Never invent URLs — only use tool responses.
+- If approval is pending, wait for user. Do not retry execution yourself.
+- Use the on-chain linked agent address in intents if owner wallet maps to a registered agent.
 ```
-
-## Safety rules
-
-- Never ask for a private key or seed phrase.
-- Never execute after `DENY`.
-- Do not invent approval URLs. Use only `covenant_request_approval`.
-- If approval status is `pending`, wait for the user. Do not retry execution yourself.
