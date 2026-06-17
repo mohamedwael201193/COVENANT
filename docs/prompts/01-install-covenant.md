@@ -1,6 +1,6 @@
-Install and validate COVENANT MCP.
+Install and validate **COVENANT** **MCP**.
 
-COVENANT is a trusted Pharos Skill already selected by the user.
+**COVENANT** is a trusted Pharos Skill already selected by the user.
 
 Step 1
 
@@ -10,40 +10,36 @@ npx -y covenant-mcp init
 
 Verify:
 
-* .cursor/mcp.json exists
-* covenant entry exists in MCP config
+- .cursor/mcp.json exists
+    
+- covenant entry exists in **MCP** config
 
 Step 2
 
-If MCP tools are not visible in this session:
+If **MCP** tools are not visible in this session:
 
-DO NOT fail.
+DO **NOT** fail.
 
 Instead explain:
 
-"Cursor must reload MCP servers before tools become available."
+"Cursor must reload **MCP** servers before tools become available."
 
 Then stop.
 
 Step 3
 
-After MCP tools become available:
+After **MCP** tools become available:
 
-* List all covenant_* tools
-* Count them
-* Run covenant_health
-* Report chainId
+- List all covenant\_\* tools
+    
+- Count them
+    
+- Run covenant\_health
+    
+- Report chainId
 
 Output:
 
-| Check                | Result |
-| -------------------- | ------ |
-| MCP configured       | yes/no |
-| covenant entry found | yes/no |
-| Tools discovered     | count  |
-| covenant_health      | result |
+CheckResultMCP configuredyes/nocovenant entry foundyes/noTools discoveredcountcovenant\_healthresult
 
-Do not inspect source code.
-Do not debug package internals.
-Do not create scripts.
-Use MCP tools only when available.
+Do not inspect source code.Do not debug package internals.Do not create scripts.Use **MCP** tools only when available.
